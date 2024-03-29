@@ -1,3 +1,7 @@
 /.vs
 /orgBidAplctn/bin
 /orgBidAplctn/obj
+*DS_Store
+/DS_Store
+/DS_Store*
+/DS_Store/*
