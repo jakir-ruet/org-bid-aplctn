@@ -1,0 +1,1028 @@
+﻿@model BidOrderDetailModel
+@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/daterangepicker/daterangepicker.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedcolumns.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedheader.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/lib/select2-bootstrap4-theme/dist/select2-bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <link rel="stylesheet" href="~/lib/clockpicker/bootstrap-clockpicker.min.css">
+    <link rel="stylesheet" href="~/lib/dual-list-box/dist/dual-listbox.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+    </style>
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+
+<div class="block-header">
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            @if (Model.CommBidMstrs.BidStat <= 1) { <h2>Edit Bid Details</h2> } else { <h2>Bid Details</h2> }
+        </div>
+    </div>
+</div>
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card" style="margin-bottom: 10px !important;">
+            <div class="body" style="padding-bottom: 10px !important;">
+                <div class="form-row">
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="bidId">Bid Id</label>
+                        <input type="text" class="form-control" id="bidId" value="@Model.CommBidMstrs.BidId" readonly>
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="bidDt">Bid Date *</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="icon-calendar"></i></span>
+                            </div>
+                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="Bid Date" id="bidDt" autocomplete="off" value="@Model.CommBidMstrs.BidDate.ToString("dd-MMM-yyyy")" required @(Model.CommBidMstrs.BidStat != 0 ? "disabled" : "")>
+                        </div>
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="startTm">Start Time *</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="icon-clock"></i></span>
+                            </div>
+                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="Start Time" id="startTm" autocomplete="off" maxlength="5" oninput="restrictInputToNumbersAndColon(this);" value="@Model.CommBidMstrs.BidStrtTm.ToString("HH:mm")" required @(Model.CommBidMstrs.BidStat != 0 ? "disabled" : "")>
+                        </div>
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="endTm">End Time *</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="icon-clock"></i></span>
+                            </div>
+                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="End Time" id="endTm" autocomplete="off" maxlength="5" oninput="restrictInputToNumbersAndColon(this);" value="@Model.CommBidMstrs.BidEndTm.ToString("HH:mm")" required @(Model.CommBidMstrs.BidStat > 1 ? "disabled" : "")>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                        <label for="prodList">Product Name *</label>
+                        <select class="form-control select2-prod" id="prodList" required @(Model.CommBidMstrs.BidStat != 0 ? "disabled" : "")>
+                            <!-- Product will be dynamically populated here -->
+                        </select>
+                    </div>
+                    <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                        <label for="wareList">Warehouse Name *</label>
+                        <select class="form-control select2-ware" id="wareList" required @(Model.CommBidMstrs.BidStat != 0 ? "disabled" : "")>
+                            <!-- Warehouse will be dynamically populated here -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="bidQnty">Bid Qnty *</label>
+                        <input type="text" class="form-control" id="bidQnty" value="@Model.CommBidMstrs.BidQnty.ToString("N0")" oninput="this.value=this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required @(Model.CommBidMstrs.BidStat != 0 ? "disabled" : "") />
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="bidRate">Bid Rate *</label>
+                        <input type="text" class="form-control" id="bidRate" value="@Model.CommBidMstrs.BidRate.ToString("N2")" oninput="this.value=this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required @(Model.CommBidMstrs.BidStat != 0 ? "disabled" : "") />
+                    </div>
+                    <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                        <label for="bidStat">Bid Status</label>
+                        <select class="custom-select" id="bidStat" disabled>
+                            <option value="0" selected='@(Model.CommBidMstrs.BidStat == 0 ? true : false)'>Draft</option>
+                            <option value="1" selected='@(Model.CommBidMstrs.BidStat == 1 ? true : false)'>Active</option>
+                            <option value="2" selected='@(Model.CommBidMstrs.BidStat == 2 ? true : false)'>Closed</option>
+                            <option value="3" selected='@(Model.CommBidMstrs.BidStat == 3 ? true : false)'>Canceled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group form-float" style="margin-bottom:5px !important;">
+                    <label for="bidNote">Notes</label>
+                    <textarea class="form-control" rows="3" id="bidNote" @(Model.CommBidMstrs.BidStat > 1 ? "disabled" : "")>@(Model.CommBidMstrs.BidNote != null ? Model.CommBidMstrs.BidNote.Trim() : "")</textarea>
+                </div>
+                <input type="hidden" id="prodCode" value="@Model.CommBidMstrs.Prod.ProdCode.Trim()">
+                <input type="hidden" id="senderCode" value="">
+                <input type="hidden" id="tockenCode" value="">
+                <input type="hidden" id="receiveNo" value="">
+                <input type="hidden" id="bidStat" value="@Model.CommBidMstrs.BidStat">
+            </div>
+            <div class="row" style="margin-left: 5px !important; margin-right: 5px !important; margin-bottom: 10px;">
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="d-flex">
+                        @if (Model.CommBidMstrs.BidStat == 0) {
+                            <button type="button" class="btn btn-info" id="activateBid" style="width: 250px;"><i class="fa  fa-flash (alias)"></i>&nbsp;&nbsp; Activate & Send SMS </button>
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="d-flex flex-row-reverse">
+                        <div class="page_action">
+                            <button type="button" class="btn btn-primary" id="printBid" title="Print Bid"><i class="fa fa-print"></i>&nbsp;&nbsp; Print</button>
+                            @if (Model.CommBidMstrs.BidStat <= 1)
+                            {
+                                <button type="button" class="btn btn-secondary" id="saveDetails" style="width: 250px;"><i class="fa  fa-save (alias)"></i>&nbsp;&nbsp; Save</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="row" style="margin-left: 5px !important; margin-right: 5px !important; margin-top: 10px;">
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="d-flex">
+                        
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="d-flex flex-row-reverse">
+                        <div class="page_action">
+                            <button type="button" class="btn btn-secondary" id="refList" style="width: 40px;" title="Refresh Party List"><i class="fa fa-refresh"></i></button>
+                            @if (Model.CommBidMstrs.BidStat <= 1)
+                            {
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addModal" title="Add Party To Bid"><i class="fa fa-download"></i> Import Party</button>
+                                <button type="button" class="btn btn-secondary" id="resendSms" @if (Model.CommBidMstrs.BidStat == 0) { <text>style="display: none;"</text> } title="Resend SMS To All Party"><i class="fa fa-send"></i> Resend SMS</button>
+                            }
+                            <button type="button" class="btn btn-info" id="smsBalance" style="width: 40px;" title="Get Current SMS Balance"><i class="fa fa-info-circle"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table id="bidTable" class="table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">Sys #</th>
+                                <th style="text-align: center;">Party Name</th>
+                                <th style="text-align: center;">Contact No</th>
+                                <th style="text-align: center;">Bid Qnty</th>
+                                <th style="text-align: center;">Bid Rate</th>
+                                <th style="text-align: center;">Alloc Qnty</th>
+                                <th style="text-align: center;">Alloc Rate</th>
+                                <th style="text-align: center;">SMS</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var bidder in Model.CommBidClntBidders)
+                            {
+                                <tr>
+                                    <td>@bidder.SysId</td>
+                                    <td>@bidder.Party.PartyName</td>
+                                    <td align="center">@bidder.SmsContNo</td>
+                                    <td align="right">@((bidder.BidQnty.HasValue) ? bidder.BidQnty.Value.ToString("N0") : "0")</td>
+                                    <td align="right">@((bidder.BidRate.HasValue) ? bidder.BidRate.Value.ToString("N2") : "0")</td>
+                                    <td align="right">@((bidder.AllocQnty.HasValue) ? bidder.AllocQnty.Value.ToString("N0") : "0")</td>
+                                    <td align="right">@((bidder.AllocRate.HasValue) ? bidder.AllocRate.Value.ToString("N2") : "0")</td>
+                                    <td align="center">@Html.Raw(bidder.SmsSendStat == 1 ? "<i class='fa fa-check'></i>" : "")</td>
+                                    <td align="center">@Html.Raw(bidder.BidAttnStat == 1 ? "<i class='fa fa-check'></i>" : "")</td>
+                                    <td align="center">
+                                        @if (Model.CommBidMstrs.BidStat < 2)
+                                        {
+                                            <button type="button" class="btn btn-secondary btn-sm sendSms" data-id="@bidder.SysId" title="Send SMS To The Party"><i class="fa fa-send"></i></button>
+                                        }
+                                        @if (Model.CommBidMstrs.BidStat == 0)
+                                        {
+                                            <button type="button" class="btn btn-danger btn-sm deleteParty" data-id="@bidder.SysId" title="Remove Party From The Bid"><i class="fa fa-trash"></i></button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add/Edit Modal -->
+<div class="modal" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add/Edit Bid</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="body">
+                        <div class="form-group" style="margin-bottom:5px !important;">
+                            <label for="bidNote">Bidding Party List</label>
+                            <select class="selParty" multiple></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCategory">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            $('#bidDt').daterangepicker({
+                singleDatePicker: true, // For a single date selection
+                autoclose: true, // Close the datepicker on selection
+                showDropdowns: true, // Show year and month dropdowns
+                locale: {
+                    format: 'DD-MMM-YYYY', // Set the desired date format
+                },
+            });
+            $('#startTm').clockpicker({
+                placement: 'bottom',
+                align: 'left',
+                autoclose: true,
+                default: 'now', // Default time to show on the clockpicker
+                donetext: 'Done'
+            });
+            $('#endTm').clockpicker({
+                placement: 'bottom',
+                align: 'left',
+                autoclose: true,
+                default: 'now', // Default time to show on the clockpicker
+                donetext: 'Done'
+            });
+
+            $('[data-toggle="tooltip"]').tooltip();
+            var bidTable = $('#bidTable').DataTable({
+                paging: false,
+                order: [[1, 'asc']],
+                columnDefs: [
+                    { 'visible': false, 'targets': [0] }
+                ]
+            });
+
+            loadAllInfo();
+            function loadAllInfo() {
+                $('.page-loader-wrapper').fadeIn();
+
+                // Fetch the Product data
+                $.ajax({
+                    url: '/Bidding/GetProductAjax',
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function (data) {
+                        // Initialize Select2 with the fetched data
+                        $('.select2-prod').select2({
+                            theme: 'bootstrap4',
+                            data: data,
+                        });
+
+                        // Get the value of Product Name from Razor Model
+                        var selectedValue = '@(string.IsNullOrEmpty(Model.CommBidMstrs.Prod.ProdId) ? "" : Model.CommBidMstrs.Prod.ProdId.Trim())';
+
+                        // Set the selected value in the Select2 input
+                        $('.select2-prod').val(selectedValue).trigger('change');
+                    },
+                });
+
+                // Fetch the Warehouse data
+                $.ajax({
+                    url: '/Bidding/GetWarehouseAjax',
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function (data) {
+                        // Initialize Select2 with the fetched data
+                        $('.select2-ware').select2({
+                            theme: 'bootstrap4',
+                            data: data,
+                        });
+                        // console.log('Warehouse Name - @Model.CommBidMstrs.Warehouse.WareName');
+                        var selectedValue = '@(string.IsNullOrEmpty(Model.CommBidMstrs.Warehouse.WareId) ? "" : Model.CommBidMstrs.Warehouse.WareId.Trim())';
+                        // console.log(selectedValue);
+                        $('.select2-ware').val(selectedValue).trigger('change');
+                    },
+                });
+
+                // Fetch the Party data
+                $.ajax({
+                    url: '/Bidding/GetPartyAjax', // Replace with your API endpoint URL
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        $('.selParty').empty();
+
+                        // Add each party name to the DualListBox
+                        data.forEach(function (partyName) {
+                            $('.selParty').append($('<option>', {
+                                value: partyName.id,
+                                text: partyName.text,
+                            }));
+                        });
+
+                        // Initialize DualListBox for the first time
+                        dlb1 = new DualListbox('.selParty', {
+                            availableTitle: 'Available Party',
+                            selectedTitle: 'Selected Party',
+                            addButtonText: '>',
+                            removeButtonText: '<',
+                            addAllButtonText: '>>',
+                            removeAllButtonText: '<<',
+                            searchPlaceholder: 'Search Party',
+                        });
+                    }
+                });
+
+                // Fetch the SMS Settings data
+                $.ajax({
+                    url: '/Bidding/GetSmsSett',
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function (data) {
+                        $('#senderCode').val(data.senderNo);
+                        $('#tockenCode').val(data.tokenNo);
+                        $('#receiveNo').val(data.receiveNo);
+                    },
+                });
+                $('.page-loader-wrapper').fadeOut();
+            }
+
+            var rows = $('#bidTable tbody tr');
+            var rowIndex = 0;
+            $('#resendSms').on('click', function () {
+                swal({
+                    title: "SMS Send Alert",
+                    text: "You are going to send / resend SMS to EVERYONE !",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#637aae",
+                    confirmButtonText: "Yes, Send EVERYONE",
+                    closeOnConfirm: false
+                }, function (isConfirmed) {
+                    if (isConfirmed) {
+                        // Start the loop
+                        rowIndex = 0;
+                        processRows();
+                    }
+                });
+            });
+
+            function processRows() {
+                if (rowIndex >= rows.length) {
+                    // Loop completed, exit
+                    swal("Process Completed", "All SMS send successfully ... If any error occured you will see the details on SMS column.", "success");
+                    checkSmsBal();
+                    return;
+                }
+                var senderCode = $('#senderCode').val();
+                var tockenCode = $('#tockenCode').val();
+                var receiveNo = $('#receiveNo').val();
+
+                var sysId = bidTable.column(0).data()[rowIndex];
+                var bidId = $('#bidId').val();
+                var prodCode = $('#prodCode').val();
+                var bidRate = $('#bidRate').val() ? $('#bidRate').val() : 0;
+                var smsCell = $(rows[rowIndex]).find('td:eq(6)'); // Column index of the SMS cell
+                var smsPhoneNo = $(rows[rowIndex]).find('td:eq(1)').text();
+                var endTm = $('#bidDt').val() + ' ' + $('#endTm').val();
+                var wareName = $('.select2-ware :selected').text();
+                var smsMsg = bidId + " " + prodCode + " 0 " + bidRate + " by " + endTm + " " + wareName + " Reply to +" + receiveNo;
+                // console.log(smsMsg);
+
+                // Show spinner
+                var spinner = $('<div class="spinner-border text-primary" role="status"></div>');
+                smsCell.empty().append(spinner);
+                $.ajax({
+                    url: 'https://sysadmin.muthobarta.com/api/v1/send-sms-get?token=' + tockenCode + '&sender_id=' + senderCode + '&receiver=' + smsPhoneNo + '&message=' + smsMsg + '&remove_duplicate=true',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        // Handle the API response data here
+                        // console.log(data); // You can use the data in JavaScript as needed
+                        const apiResponse = data;
+                        const code = apiResponse.code;
+                        const message = apiResponse.message;
+                        if (code == 200) {
+                            smsCell.html('<i class="fa fa-check" data-toggle="tooltip" data-placement="top" title="SMS Had Been Send Successfully ..."></i>');
+                            $.ajax({
+                                url: '/Bidding/UpdateSMSStatus',
+                                method: 'POST',
+                                data: {
+                                    id: sysId,
+                                    smsSendMsg: smsMsg,
+                                    returnStr: JSON.stringify(apiResponse)
+                                },
+                                success: function (response) {
+                                    console.log("SMS Status Updated");
+                                },
+                                error: function (error) {
+                                    console.log(error);
+                                }
+                            });
+                        } else {
+                            smsCell.html('<i class="fa fa-times text-danger" data-toggle="tooltip" data-placement="top" title="' + message + '"></i>');
+                            console.log("Something went wrong... " + message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle error if needed
+                        console.error(error);
+                        smsCell.html('<i class="fa fa-times text-danger" data-toggle="tooltip" data-placement="top" title="' + error.message + '"></i>');
+                        swal("Something Wrong !", "Something went wrong... " + error.message, "error");
+                    }
+                });
+
+                // Move to the next row
+                rowIndex++;
+                // Continue the loop recursively
+                processRows();
+            }
+
+            // Send SMS To Party
+            $('#bidTable').on('click', '.sendSms', function () {
+                var senderCode = $('#senderCode').val();
+                var tockenCode = $('#tockenCode').val();
+                var receiveNo = $('#receiveNo').val();
+
+                var sysId = $(this).data('id');
+                // Find the closest row to the clicked button
+                var $row = $(this).closest('tr');
+                var bidId = $('#bidId').val();
+                var prodCode = $('#prodCode').val();
+                var bidRate = $('#bidRate').val() ? $('#bidRate').val() : 0;
+                var smsCell = $row.find('td:eq(6)');
+                var smsPhoneNo = $row.find('td:eq(1)').text();
+                var endTm = $('#bidDt').val() + ' ' + $('#endTm').val();
+                var wareName = $('.select2-ware :selected').text();
+                var smsMsg = bidId + " " + prodCode + " 0 " + bidRate + " by " + endTm + " " + wareName + " Reply to +" + receiveNo;
+                // console.log(smsMsg);
+                // Show spinner
+                var spinner = $('<div class="spinner-border text-primary" role="status"></div>');
+                smsCell.empty().append(spinner);
+
+                swal({
+                    title: "SMS Send Alert",
+                    text: "You are going to send SMS to " + smsPhoneNo,
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#637aae",
+                    confirmButtonText: "Yes, Send SMS",
+                    closeOnConfirm: false
+                }, function (isConfirmed) {
+                    if (isConfirmed) {
+                        $.ajax({
+                            url: 'https://sysadmin.muthobarta.com/api/v1/send-sms-get?token=' + tockenCode + '&sender_id=' + senderCode + '&receiver=' + smsPhoneNo + '&message=' + smsMsg + '&remove_duplicate=true',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function (data) {
+                                // Handle the API response data here
+                                // console.log(data); // You can use the data in JavaScript as needed
+                                const apiResponse = data;
+                                const code = apiResponse.code;
+                                const message = apiResponse.message;
+                                if (code == 200) {
+                                    smsCell.html('<i class="fa fa-check" data-toggle="tooltip" data-placement="top" title="SMS Had Been Send Successfully ..."></i>');
+                                    swal("SMS Send!", "SMS Had Been Send Successfully ...", "success");
+                                    $.ajax({
+                                        url: '/Bidding/UpdateSMSStatus',
+                                        method: 'POST',
+                                        data: {
+                                            id: sysId,
+                                            smsSendMsg: smsMsg,
+                                            returnStr: JSON.stringify(apiResponse)
+                                        },
+                                        success: function (response) {
+                                            console.log("SMS Status Updated");
+                                        },
+                                        error: function (error) {
+                                            console.log(error);
+                                        }
+                                    });
+                                } else {
+                                    smsCell.html('<i class="fa fa-times text-danger" data-toggle="tooltip" data-placement="top" title="' + message + '"></i>');
+                                    swal("Something Wrong !", "Something went wrong... " + message, "success");
+                                }
+
+                                // Use the properties as needed
+                                // console.log("Code:", code); // Output: Code: 200
+                                // console.log("Message:", message); // Output: Message: SMS
+                            },
+                            error: function (xhr, status, error) {
+                                // Handle error if needed
+                                console.error(error);
+                                smsCell.html('<i class="fa fa-times text-danger" data-toggle="tooltip" data-placement="top" title="' + error.message + '"></i>');
+                                swal("Something Wrong !", "Something went wrong... " + error.message, "success");
+                            }
+                        });
+                    } else {
+                        // User clicked on the Cancel button
+                        smsCell.html('');
+                    }
+                });
+            });
+
+            // Delete Party
+            $('#bidTable').on('click', '.deleteParty', function () {
+                var sysId = $(this).data('id');
+                // console.log(sysId);
+                var $row = $(this).closest('tr');
+                swal({
+                    title: "Are you sure?",
+                    text: "You will not be able to recover the Party name!",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    confirmButtonText: "Yes, delete it!",
+                    closeOnConfirm: false
+                }, function () {
+                    $.ajax({
+                        url: '/Bidding/DeleteBidParty',
+                        method: 'POST',
+                        data: { id: sysId },
+                        success: function (response) {
+                            if (response.success == false) {
+                                var errorMessage = response.message;
+                                showErrorToast(errorMessage);
+                            } else {
+                                // Fade out the row with animation
+                                $row.fadeOut(400, function () {
+                                    // Animation complete, remove the row from the DOM
+                                    $row.remove();
+                                    bidTable.draw();
+                                });
+                                swal("Deleted!", "Party has been Removed.", "success");
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error);
+                            showErrorToast(error.status + ': ' + error.statusText);
+                        }
+                    });
+                });
+            });
+
+            $('#addModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var bidId = $('#bidId').val();
+                var modal = $(this);
+                // console.log(bidId);
+
+                // Set modal title based on operation
+                if (bidId) {
+                    modal.find('.modal-title').text('Edit Party');
+                } else {
+                    modal.find('.modal-title').text('Add Party');
+                }
+            });
+
+            // Save Category
+            $('#saveCategory').click(function () {
+                // e.preventDefault();
+                $("#saveCategory").html("Importing...");
+                $("#saveCategory").prop("disabled", true);
+                var bidId = $('#bidId').val();
+                // Get the selected party values from the DualListBox
+                var selectedParties = $('.selParty').val();
+                // Use the selectedParties array as needed (e.g., submit it to the server)
+                var list = [];
+                // For example, if you want to show the selected values in the console:
+                selectedParties.forEach(function (partyId) {
+                    // console.log(partyId);
+                    // Create an object with "PartyId" and its corresponding value
+                    var bidPartyList = {
+                        PartyId: partyId
+                    };
+                    list.push(bidPartyList);
+                });
+                // console.log(list);
+                // Send the form data using AJAX
+                $.ajax({
+                    url: "/Bidding/BidAddPartyProc",
+                    type: "POST",
+                    data: {
+                        id: bidId,
+                        model: list
+                    },
+                    success: function (response) {
+                        if (response.success = false) {
+                            $("#saveCategory").html("Import");
+                            $("#saveCategory").prop("disabled", false);
+                            var errorMessage = response.message;
+                            console.log(errorMessage);
+                            showErrorToast(errorMessage);
+                        } else {
+                            $("#saveCategory").html("Import");
+                            $("#saveCategory").prop("disabled", false);
+                            $('#addModal').modal('hide');
+                            retreiveServerData();
+                            //window.location.href = "/Bidding/BidMngrEdit?id=" + bidId;
+                        }
+                    },
+                    error: function (error) {
+                        $("#saveCategory").html("Import");
+                        $("#saveCategory").prop("disabled", false);
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                    }
+                });
+
+            });
+
+            $('#refList').click(function () {
+                retreiveServerData();
+            });
+
+            $('#printBid').click(function () {
+                var bidId = $('#bidId').val();
+                //window.location.href = '/Bidding/BidPrint?id=' + bidId;
+                var newWindow = window.open('/Bidding/BidPrint?id=' + bidId, '_blank');
+                newWindow.focus();
+            });
+
+            $('#activateBid').click(function () {
+                swal({
+                    title: "Activating BID",
+                    text: "You are going to ACTIVATE the BID, which is Unavoidable ! Are you Sure ?",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dd6161",
+                    confirmButtonText: "Yes, ACTIVATE",
+                    closeOnConfirm: false
+                }, function (isConfirmed) {
+                    if (isConfirmed) {
+                        $("#activateBid").html("Activating ...");
+                        $("#activateBid").prop("disabled", true);
+                        // Process Activation ...
+                        var bidId = $('#bidId').val();
+                        var bidDt = $('#bidDt').val();
+                        var startTm = $('#startTm').val();
+                        var endTm = $('#endTm').val();
+                        var prodId = $('#prodList').val();
+                        var wareId = $('#wareList').val();
+                        var bidQnty = $('#bidQnty').val() ? $('#bidQnty').val() : 0;
+                        var bidRate = $('#bidRate').val() ? $('#bidRate').val() : 0;
+                        var bidNote = $('#bidNote').val() ? $('#bidNote').val().trim() : "";
+                        var bidStat = $('#bidStat').val();
+
+                        // Convert the time strings to Date objects
+                        var tstStrtTime = new Date(bidDt + " " + startTm);
+                        var tstEndTime = new Date(bidDt + " " + endTm);
+
+                        // Calculate the time difference in milliseconds
+                        var tstTimeDiff = tstEndTime - tstStrtTime;
+                        if (tstTimeDiff < 0) {
+                            swal("Invalid Time", "You need to give Proper Time before Continue !!!", "warning");
+                            return false;
+                        }
+                        var startTm = $('#bidDt').val() + ' ' + $('#startTm').val();
+                        var endTm = $('#bidDt').val() + ' ' + $('#endTm').val();
+                        var bidData = {
+                            BidId: bidId,
+                            BidDate: bidDt,
+                            BidStrtTm: startTm,
+                            BidEndTm: endTm,
+                            ProdId: prodId,
+                            WareId: wareId,
+                            BidQnty: bidQnty,
+                            BidRate: bidRate,
+                            BidNote: bidNote,
+                            BidStat: bidStat
+                        };
+
+                        $.ajax({
+                            url: '/Bidding/ActivateBid',
+                            method: 'POST',
+                            data: {
+                                id: bidId,
+                                model: bidData
+                            },
+                            success: function (response) {
+                                if (response.success = false) {
+                                    $("#activateBid").html("Activate");
+                                    $("#activateBid").prop("disabled", false);
+                                    var errorMessage = response.message;
+                                    console.log(errorMessage);
+                                    showErrorToast(errorMessage);
+                                } else {
+                                    $("#bidStat").val("1");
+                                    $("#activateBid").remove();
+                                    $(".deleteParty").remove();
+                                    rowIndex = 0;
+                                    $('#bidDt').prop('disabled', true);
+                                    $('#startTm').prop('disabled', true);
+                                    $('#prodList').prop('disabled', true);
+                                    $('#wareList').prop('disabled', true);
+                                    $('#bidQnty').prop('disabled', true);
+                                    $('#bidRate').prop('disabled', true);
+                                    $('#bidStat').val('1');
+                                    $('#resendSms').show();
+                                    processRows();
+                                    console.log("Bid Status Updated");
+                                }
+                            },
+                            error: function (error) {
+                                $("#activateBid").html("Activate");
+                                $("#activateBid").prop("disabled", false);
+                                console.log(error);
+                                showErrorToast(error.status + ': ' + error.statusText);
+                            }
+                        });
+                    }
+                });
+            });
+
+            $('#smsBalance').click(function () {
+                // Set the API URL
+                var apiUrl = 'https://sysadmin.muthobarta.com/api/v1/get-balance';
+
+                // Set the Authorization token
+                var authToken = 'Token ' + $('#tockenCode').val();
+
+                // Make the AJAX request
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    beforeSend: function (xhr) {
+                        // Set the Authorization header
+                        xhr.setRequestHeader('Authorization', authToken);
+                    },
+                    success: function (response) {
+                        // Access the properties of the response JSON object
+                        var code = response.code;
+                        var message = response.message;
+                        var balance = response.balance;
+                        var expiry = moment(response.expiry).format("YYYY-MM-DD");
+
+                        // Use the values as needed
+                        // console.log('Code:', code);
+                        // console.log('Message:', message);
+                        // console.log('Balance:', balance);
+                        // console.log('Expire:', expiry);
+                        var currentTime = new Date().getTime();
+                        var dataToSave = {
+                            data: balance.toLocaleString('en', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                            }),
+                            timestamp: currentTime
+                        };
+                        localStorage.setItem('apiSmsData', JSON.stringify(dataToSave));
+                        $('.side-sms-bal h6').text(balance.toLocaleString('en', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                        }));
+                        swal("SMS Balance - Tk " + balance.toLocaleString(), "Balance - " + balance.toLocaleString() + ", Expiry Date - " + expiry, "success");
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors here
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            function checkSmsBal() {
+                // Set the API URL
+                var apiUrl = 'https://sysadmin.muthobarta.com/api/v1/get-balance';
+
+                // Set the Authorization token
+                var authToken = 'Token ' + $('#tockenCode').val();
+
+                // Make the AJAX request
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    beforeSend: function (xhr) {
+                        // Set the Authorization header
+                        xhr.setRequestHeader('Authorization', authToken);
+                    },
+                    success: function (response) {
+                        // Access the properties of the response JSON object
+                        var code = response.code;
+                        var message = response.message;
+                        var balance = response.balance;
+                        var expiry = moment(response.expiry).format("YYYY-MM-DD");
+
+                        var currentTime = new Date().getTime();
+                        var dataToSave = {
+                            data: balance.toLocaleString('en', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                            }),
+                            timestamp: currentTime
+                        };
+                        localStorage.setItem('apiSmsData', JSON.stringify(dataToSave));
+                        $('.side-sms-bal h6').text(balance.toLocaleString('en', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                        }));
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors here
+                        console.error('Error:', error);
+                    }
+                });
+            }
+
+            $('#saveDetails').click(function () {
+                var bidId = $('#bidId').val();
+                var bidDt = $('#bidDt').val();
+                var startTm = $('#startTm').val();
+                var endTm = $('#endTm').val();
+                var prodId = $('#prodList').val();
+                var wareId = $('#wareList').val();
+                var bidQnty = $('#bidQnty').val() ? $('#bidQnty').val() : 0;
+                var bidRate = $('#bidRate').val() ? $('#bidRate').val() : 0;
+                var bidNote = $('#bidNote').val() ? $('#bidNote').val().trim() : "";
+                var bidStat = $('#bidStat').val();
+
+                // Convert the time strings to Date objects
+                var tstStrtTime = new Date(bidDt + " " + startTm);
+                var tstEndTime = new Date(bidDt + " " + endTm);
+
+                // Calculate the time difference in milliseconds
+                var tstTimeDiff = tstEndTime - tstStrtTime;
+                if (tstTimeDiff < 0) {
+                    swal("Invalid Time", "You need to give Proper Time before Continue !!!", "warning");
+                    return false;
+                }
+                var startTm = $('#bidDt').val() + ' ' + $('#startTm').val();
+                var endTm = $('#bidDt').val() + ' ' + $('#endTm').val();
+                var bidData = {
+                    BidId: bidId,
+                    BidDate: bidDt,
+                    BidStrtTm: startTm,
+                    BidEndTm: endTm,
+                    ProdId: prodId,
+                    WareId: wareId,
+                    BidQnty: bidQnty,
+                    BidRate: bidRate,
+                    BidNote: bidNote,
+                    BidStat: bidStat
+                };
+                // console.log(bidData);
+
+                // Send the form data using AJAX
+                $.ajax({
+                    url: "/Bidding/BidEditProc", // Replace with your server-side URL to handle form submission
+                    type: "POST",
+                    data: {
+                        id: bidId,
+                        model: bidData
+                    },
+                    success: function (response) {
+                        if (response.result == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                        } else {
+                            swal("Updated !", "Bid Updated Successfully ...", "success");
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                    }
+                });
+            });
+
+            function retreiveServerData() {
+                var bidId = $('#bidId').val();
+                // console.log(bidId);
+                bidTable.destroy();
+                // Initialize the datatable
+                bidTable = $('#bidTable').DataTable({
+                    // Paging Setups
+                    paging: false,
+                    // Searching Setups
+                    searching: { regex: true },
+                    order: [[1, 'asc']],
+                    // Set up datatable options and configuration
+                    contentType: "application/json",
+                    dataType: "json",
+                    ajax: {
+                        url: '/Bidding/GetBidPartyListAjax?id=' + bidId,
+                        type: "GET",
+                        dataSrc: "data",
+                        data: function (d) {
+                            return JSON.stringify(d);
+                        }
+                    },
+                    columnDefs: [
+                        //hide the second & fourth column
+                        { 'visible': false, 'targets': [0] }
+                    ],
+                    columns: [
+                        { data: 'sysId', name: "SysId", className: 'text-center' },
+                        { data: 'party.partyName', name: 'PartyName' },
+                        { data: 'smsContNo', name: 'SmsContNo', className: 'text-center' },
+                        {
+                            data: 'bidQnty',
+                            name: 'BidQnty',
+                            render: function (data, type, row) {
+                                return data.toLocaleString();
+                            },
+                            className: 'text-right'
+                        },
+                        {
+                            data: 'bidRate',
+                            name: 'BidRate',
+                            render: function (data, type, row) {
+                                return data.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            },
+                            className: 'text-right'
+                        },
+                        {
+                            data: 'allocQnty',
+                            name: 'AllocQnty',
+                            render: function (data, type, row) {
+                                return data.toLocaleString();
+                            },
+                            className: 'text-right'
+                        },
+                        {
+                            data: 'allocRate',
+                            name: 'AllocRate',
+                            render: function (data, type, row) {
+                                return data.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            },
+                            className: 'text-right'
+                        },
+                        {
+                            data: 'smsSendStat',
+                            name: 'SmsSendStat',
+                            render: function (data, type, row) {
+                                if (data === 1) {
+                                    return '<i class="fa fa-check"></i>';
+                                } else {
+                                    return '';
+                                }
+                            },
+                            className: 'text-center'
+                        },
+                        {
+                            data: 'bidAttnStat',
+                            name: 'BidAttnStat',
+                            render: function (data, type, row) {
+                                if (data === 1) {
+                                    return '<i class="fa fa-check"></i>';
+                                } else {
+                                    return '';
+                                }
+                            },
+                            className: 'text-center'
+                        },
+                        {
+                            data: null, render: function (data, type, row) {
+                                if ($("#bidStat").val() != 2) {
+                                    var editBtn = '<button type="button" class="btn btn-secondary sendSms" data-id="' + row.sysId.toString() + '"><i class="fa fa-send"></i></button>';
+                                } else { var editBtn = ''; }
+                                if ($("#bidStat").val() < 1) {
+                                    var deleteBtn = '<button type="button" class="btn btn-danger deleteParty" data-id="' + row.sysId.toString() + '"><i class="fa fa-trash"></i></button>';
+                                } else { var deleteBtn = ''; }
+                                return editBtn + ' ' + deleteBtn;
+                            },
+                            className: 'text-center'
+                        }
+                    ]
+                });
+            };
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+        });
+        // Function to restrict input to only numeric characters (0-9) and periods (.)
+        function restrictInputToNumbersAndPeriod(input) {
+            input.value = input.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+        }
+
+        function restrictInputToNumbersAndColon(input) {
+            input.value = input.value.replace(/[^0-9:]/g, '').replace(/(\:.*)\:/g, '$1');
+        }
+    </script>
+
+    <!--    OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="~/lib/daterangepicker/daterangepicker.min.js" type="text/javascript"></script>
+    <script src="~/lib/clockpicker/bootstrap-clockpicker.min.js"></script>
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.colVis.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.html5.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.print.min.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <script src="~/lib/dual-list-box/dist/dual-listbox.js"></script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

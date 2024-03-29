@@ -1,0 +1,712 @@
+﻿@model BidOrderDetailModel
+@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedheader.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+
+        /* Style for the floating sidebar */
+        #floatingSidebar {
+            background-color: transparent; /* Make the background transparent */
+            border: none;
+            font-size: 18px;
+            color: #333;
+            text-align: center;
+            width: 200px;
+            position: fixed;
+            top: 38%;
+            right: -5px;
+            z-index: 3;
+        }
+
+        /* Custom style for the allocQnty label */
+        #allocFloatQnty {
+            border: none;
+            background-color: #17a2b8;
+            font-weight: bold;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 20px;
+        }
+
+        /* Style the show/hide button */
+        #showHideButton {
+            background-color: #17a2b8;
+            /*background-color: transparent;*/
+            border: none;
+            outline: none;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            padding: 8px;
+            cursor: pointer;
+            position: fixed;
+            top: 38%;
+            right: 5px;
+            width: 40px;
+            z-index: 4;
+        }
+    </style>
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+<button id="showHideButton" onclick="toggleSidebar()"><i class="fa fa-mail-reply-all (alias)"></i></button>
+<!-- Floating Sidebar -->
+<div class="col-md-2" id="floatingSidebar">
+    <input type="text" class="form-control btn btn-info" id="allocFloatQnty" value="@(Model.CommBidMstrs.AllocQnty?.ToString("N2") ?? "0.00")" disabled />
+</div>
+<div class="block-header">
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12">
+            <h2>Bid Allocation Details</h2>
+        </div>
+    </div>
+</div>
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card" style="margin-bottom: 10px !important;">
+            <div class="body" style="padding-bottom: 10px !important;">
+                <div class="form-row">
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="bidId">Bid Id</label>
+                        <input type="text" class="form-control" id="bidId" value="@Model.CommBidMstrs.BidId" readonly>
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="bidDt">Bid Date *</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="icon-calendar"></i></span>
+                            </div>
+                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="Bid Date" id="bidDt" autocomplete="off" value="@Model.CommBidMstrs.BidDate.ToString(" dd-MMM-yyyy")" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="startTm">Start Time *</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="icon-clock"></i></span>
+                            </div>
+                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="Start Time" id="startTm" autocomplete="off" value="@Model.CommBidMstrs.BidStrtTm.ToString(" HH:mm")" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="endTm">End Time *</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="icon-clock"></i></span>
+                            </div>
+                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="End Time" id="endTm" autocomplete="off" value="@Model.CommBidMstrs.BidEndTm.ToString(" HH:mm")" disabled>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                        <label for="prodList">Product Name *</label>
+                        <input type="text" class="form-control" id="wareList" value="@Model.CommBidMstrs.Prod.ProdName" disabled />
+                    </div>
+                    <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                        <label for="wareList">Warehouse Name *</label>
+                        <input type="text" class="form-control" id="wareList" value="@Model.CommBidMstrs.Warehouse.WareName" disabled />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="bidQnty">Bid Qnty *</label>
+                        <input type="text" class="form-control" id="bidQnty" value="@Model.CommBidMstrs.BidQnty.ToString("N0")" oninput="this.value=this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" disabled />
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="bidRate">Bid Rate *</label>
+                        <input type="text" class="form-control" id="bidRate" value="@Model.CommBidMstrs.BidRate.ToString("N2")" oninput="this.value=this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" disabled />
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="allocQnty">Allocate Qnty [ Auto ]</label>
+                        <input type="text" class="form-control" id="allocQnty" value="@(Model.CommBidMstrs.AllocQnty?.ToString("N2") ?? "0.00")" oninput="this.value=this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" disabled />
+                    </div>
+                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                        <label for="allocRate">Allocate Rate *</label>
+                        <input type="text" class="form-control" id="allocRate" value="@(Model.CommBidMstrs.AllocRate?.ToString("N2") ?? "0.00")" oninput="this.value=this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" />
+                    </div>
+                </div>
+                <input type="hidden" id="senderCode" value="">
+                <input type="hidden" id="tockenCode" value="">
+                <input type="hidden" id="receiveNo" value="">
+            </div>
+
+        </div>
+        <div class="card">
+            <div class="row" style="margin-left: 5px !important; margin-right:5px !important; margin-top: 10px;">
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="page_action">
+                        <button type="button" class="btn btn-info" id="saveBid" title="Save Allocation" style="width: 120px;"><i class="fa  fa-save (alias)"></i>&nbsp;&nbsp; Save </button>
+                        <button type="button" class="btn btn-secondary" id="finSendSms" title="Send SMS To All Party"><i class="fa fa-send"></i>&nbsp;&nbsp; Finalize & Send SMS</button>
+                        <button type="button" class="btn btn-primary" id="printBid" title="Print Bid"><i class="fa fa-print"></i>&nbsp;&nbsp; Print</button>
+                        <button type="button" class="btn btn-info" id="smsBalance" style="width: 40px;" title="Get Current SMS Balance"><i class="fa fa-info-circle"></i></button>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <div class="d-flex flex-row-reverse">
+                        <div class="page_action">
+                            <button type="button" class="btn mb-1 btn-simple btn-sm btn-default btn-filter" data-target="all">All</button>
+                            <button type="button" class="btn mb-1 btn-simple btn-sm btn-warning btn-filter" data-target="active">Active</button>
+                            <button type="button" class="btn mb-1 btn-simple btn-sm btn-danger btn-filter" data-target="inactive">Inactive</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="body" style="padding-top:5px;">
+                <div class="table-responsive">
+                    <table id="bidTable" class="table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">Sys #</th>
+                                <th style="text-align: center;">Party Name</th>
+                                <th style="text-align: center;">Contact No</th>
+                                <th style="text-align: center;">Bid Qnty</th>
+                                <th style="text-align: center;">Bid Rate</th>
+                                <th style="text-align: center;">Alloc Qnty</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Sms</th>
+                                <th style="text-align: center;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int serialNo = 1;
+                            }
+                            @foreach (var bidder in Model.CommBidClntBidders)
+                            {
+                                <tr data-status="@(bidder.BidAttnStat == 1 ? "active" : "inactive")">
+                                    <td data-editable="false" align="center">@serialNo</td>
+                                    <td data-editable="false">@bidder.Party.PartyName</td>
+                                    <td data-editable="false" align="center">@bidder.SmsContNo</td>
+                                    <td data-editable="false" align="right">@((bidder.BidQnty.HasValue) ? bidder.BidQnty.Value.ToString("N0") : "0")</td>
+                                    <td data-editable="false" align="right">@((bidder.BidRate.HasValue) ? bidder.BidRate.Value.ToString("N2") : "0")</td>
+                                    <td data-editable="@(bidder.BidAttnStat == 1 ? "true" : "false")" class="numeric-column" align="right">@((bidder.AllocQnty.HasValue) ? bidder.AllocQnty.Value.ToString("N0") : "0")</td>
+                                    <td data-editable="false" align="center">@Html.Raw(bidder.BidAttnStat == 1 ? "<span class='badge badge-warning'>Active</span>" : "<span class='badge badge-danger'>Inactive</span>")</td>
+                                    <td data-editable="false" align="center">@Html.Raw(bidder.SmsAllocStat == 1 ? "<i class='fa fa-check'></i>" : "")</td>
+                                    <td data-editable="false" align="center">
+                                        <input type="hidden" class="lineSysId" data-id="@bidder.SysId" />
+                                        @if (Model.CommBidMstrs.BidStat == 2)
+                                        {
+                                            <button type="button" class="btn btn-secondary btn-sm sendSms" data-id="@bidder.SysId" title="Send SMS To The Party"><i class="fa fa-send"></i></button>
+                                        }
+                                    </td>
+                                </tr>
+
+                                serialNo++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+
+            var rows = $('#bidTable tbody tr');
+            var rowIndex = 0;
+
+            $('[data-toggle="tooltip"]').tooltip();
+            $('#bidTable').editableTableWidget();
+            var bidTable = $('#bidTable').DataTable({
+                paging: false,
+                searching: false,
+                info: false,
+                order: [[4, 'desc']],
+            });
+
+            $("#floatingSidebar").hide();
+
+            // Fetch the SMS Settings data
+            $.ajax({
+                url: '/Bidding/GetSmsSett',
+                dataType: 'json',
+                type: 'GET',
+                success: function (data) {
+                    $('#senderCode').val(data.senderNo);
+                    $('#tockenCode').val(data.tokenNo);
+                    $('#receiveNo').val(data.receiveNo);
+                },
+            });
+
+            // Define event handler for "change" event on the numeric column
+            $('.numeric-column').on('change', function () {
+                var newValue = $(this).text().trim();
+
+                // Validate the input to allow only numeric values
+                if (!isNumeric(newValue)) {
+                    $(this).text("0"); // Revert to previous value
+                    // Show an error message or revert to the previous valid state
+                    swal("Invalid Data", "You need to give Number to Continue !!!", "warning");
+                }
+            });
+
+            // Event listener for cell change
+            $('#bidTable').on('change', 'td', function () {
+                // Get the index of the column where the cell was changed
+                var columnIndex = $(this).index();
+
+                // Initialize the total value as 0
+                var totalValue = 0;
+
+                // Iterate through all rows and calculate the total value of the column
+                $('#bidTable tbody tr').each(function () {
+                    var columnValue = $(this).find('td').eq(columnIndex).text().trim();
+                    var numericValue = parseFloat(columnValue.replace(/,/g, '')); // Convert to numeric value, removing commas
+                    totalValue += isNaN(numericValue) ? 0 : numericValue; // Add to totalValue if numericValue is not NaN
+                });
+
+                // Update the HTML text field with the total value
+                $('#allocQnty').val(totalValue.toLocaleString()); // Assuming you want to display the total with 2 decimal places
+                $('#allocFloatQnty').val(totalValue.toLocaleString()); // Assuming you want to display the total with 2 decimal places
+            });
+
+            $('.btn-filter').on('click', function () {
+                var $target = $(this).data('target');
+                if ($target != 'all') {
+                    $('.table tbody tr').css('display', 'none');
+                    $('.table tbody tr[data-status="' + $target + '"]').fadeIn('slow');
+                } else {
+                    $('.table tbody tr').css('display', 'none').fadeIn('slow');
+                }
+            });
+
+            $('#finSendSms').click(function () {
+                var allocQuantity = parseFloat($('#allocQnty').val());
+                var allocRate = $('#allocRate').val() === "" ? 0 : parseFloat($('#allocRate').val());
+                if (allocQuantity == 0) {
+                    swal("No Allocation Found !", "You Didn't Allocate Any Quantity... ", "error");
+                    return false;
+                }
+                if (allocRate == 0) {
+                    swal("No Allocation Rate Given !", "You Didn't Gave Allocation Rate... ", "error");
+                    return false;
+                }
+                swal({
+                    title: "Finalizing BID",
+                    text: "You are going to FINALIZE the BID ! Do you want to continue ?",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dd6161",
+                    confirmButtonText: "Yes, FINALIZE",
+                    closeOnConfirm: false
+                }, function (isConfirmed) {
+                    if (isConfirmed) {
+                        $("#finSendSms").html("Finalizing ...");
+                        $("#finSendSms").prop("disabled", true);
+                        // Process Activation ...
+                        var bidId = $('#bidId').val();
+                        var allocQnty = $('#allocQnty').val() ? $('#allocQnty').val() : 0;
+                        var allocRate = $('#allocRate').val() ? $('#allocRate').val() : 0;
+                        var bidData = {
+                            BidId: bidId,
+                            AllocQnty: allocQnty,
+                            AllocRate: allocRate
+                        };
+                        var quantityData = [];
+                        $('#bidTable tbody tr').each(function () {
+                            // var sysId = bidTable.column(0).data()[$(this).index()];
+                            var sysId = $(this).find('.lineSysId').data('id');
+                            var rowAllocQnty = $(this).find('td:eq(5)').text();
+                            var rowAllocRate = allocRate;
+                            quantityData.push({ SysId: sysId, AllocQnty: rowAllocQnty, AllocRate: rowAllocRate });
+                        });
+                        // console.log(quantityData);
+                        $.ajax({
+                            url: '/Bidding/FinalizeCloseBid',
+                            method: 'POST',
+                            data: {
+                                id: bidId,
+                                CommBidMstrs: bidData,
+                                CommBidClntBidders: quantityData
+                            },
+                            success: function (response) {
+                                if (response.success = false) {
+                                    $("#finSendSms").html("<i class='fa fa-send'></i>&nbsp;&nbsp; Finalize & Send SMS");
+                                    $("#finSendSms").prop("disabled", false);
+                                    var errorMessage = response.message;
+                                    console.log(errorMessage);
+                                    showErrorToast(errorMessage);
+                                } else {
+                                    $("#finSendSms").remove();
+                                    $('#allocRate').prop('disabled', true);
+                                    rowIndex = 0;
+                                    sendSmsAndRedirect(bidId);
+                                    // processRows();
+                                    // console.log("Bid Status Updated");
+                                    // window.location.href = '/Bidding/BidMngrEdit?id=' + bidId;
+                                }
+                            },
+                            error: function (error) {
+                                $("#finSendSms").html("<i class='fa fa-send'></i>&nbsp;&nbsp; Finalize & Send SMS");
+                                $("#finSendSms").prop("disabled", false);
+                                console.log(error);
+                                showErrorToast(error.status + ': ' + error.statusText);
+                            }
+                        });
+                    }
+                });
+            });
+
+            async function sendSmsAndRedirect(bidId) {
+                await processRows(); // Wait for the processRows() function to complete
+                console.log("Bid Status Updated");
+                // Wait for 2 second (2000 milliseconds) before moving on
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                window.location.href = '/Bidding/BidMngrEdit?id=' + bidId;
+            }
+
+            function processRows() {
+                if (rowIndex >= rows.length) {
+                    // Loop completed, exit
+                    swal("Process Completed", "All SMS send successfully ... If any error occured you will see the details on SMS column.", "success");
+                    checkSmsBal();
+                    return;
+                }
+                var senderCode = $('#senderCode').val();
+                var tockenCode = $('#tockenCode').val();
+
+                var sysId = $(rows[rowIndex]).find('.lineSysId').data('id'); // bidTable.column(0).data()[rowIndex];
+                var smsCell = $(rows[rowIndex]).find('td:eq(7)'); // Column index of the SMS cell
+                var smsPhoneNo = $(rows[rowIndex]).find('td:eq(2)').text();
+                var prtyAllocQnty = parseFloat($(rows[rowIndex]).find('td:eq(5)').text());
+                var allocRate = $('#allocRate').val() === "" ? 0 : parseFloat($('#allocRate').val());
+                if (allocRate == 0) {
+                    swal("No Allocation Rate Given !", "You Didn't Gave Allocation Rate... ", "error");
+                    return false;
+                }
+                // Show spinner
+                if (prtyAllocQnty != 0) {
+                    var smsMsg = "Your " + prtyAllocQnty + " KG Product @@" + $('#allocRate').val() + " Order has been confirmed. Bid No: " + $('#bidId').val() + ", " + moment().format("h.mm A, DD/MM/YYYY");
+                    console.log(smsPhoneNo + ', ' + smsMsg);
+                    var spinner = $('<div class="spinner-border text-primary" role="status"></div>');
+                    smsCell.empty().append(spinner);
+                    $.ajax({
+                        url: 'https://sysadmin.muthobarta.com/api/v1/send-sms-get?token=' + tockenCode + '&sender_id=' + senderCode + '&receiver=' + smsPhoneNo + '&message=' + smsMsg + '&remove_duplicate=true',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (data) {
+                            // Handle the API response data here
+                            // console.log(data); // You can use the data in JavaScript as needed
+                            const apiResponse = data;
+                            const code = apiResponse.code;
+                            const message = apiResponse.message;
+                            if (code == 200) {
+                                smsCell.html('<i class="fa fa-check" data-toggle="tooltip" data-placement="top" title="SMS Had Been Send Successfully ..."></i>');
+                                $.ajax({
+                                    url: '/Bidding/UpdateSMSAllocStatus',
+                                    method: 'POST',
+                                    data: {
+                                        id: sysId,
+                                        smsSendMsg: smsMsg,
+                                        returnStr: JSON.stringify(apiResponse)
+                                    },
+                                    success: function (response) {
+                                        console.log("SMS Status Updated");
+                                    },
+                                    error: function (error) {
+                                        console.log(error);
+                                    }
+                                });
+                            } else {
+                                smsCell.html('<i class="fa fa-times text-danger" data-toggle="tooltip" data-placement="top" title="' + message + '"></i>');
+                                console.log("Something went wrong... " + message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            // Handle error if needed
+                            console.error(error);
+                            smsCell.html('<i class="fa fa-times text-danger" data-toggle="tooltip" data-placement="top" title="' + error.message + '"></i>');
+                            swal("Something Wrong !", "Something went wrong... " + error.message, "error");
+                        }
+                    });
+                }
+                // Move to the next row
+                rowIndex++;
+                // Continue the loop recursively
+                processRows();
+            }
+
+            function checkSmsBal() {
+                // Set the API URL
+                var apiUrl = 'https://sysadmin.muthobarta.com/api/v1/get-balance';
+
+                // Set the Authorization token
+                var authToken = 'Token ' + $('#tockenCode').val();
+
+                // Make the AJAX request
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    beforeSend: function (xhr) {
+                        // Set the Authorization header
+                        xhr.setRequestHeader('Authorization', authToken);
+                    },
+                    success: function (response) {
+                        // Access the properties of the response JSON object
+                        var code = response.code;
+                        var message = response.message;
+                        var balance = response.balance;
+                        var expiry = moment(response.expiry).format("YYYY-MM-DD");
+
+                        var currentTime = new Date().getTime();
+                        var dataToSave = {
+                            data: balance.toLocaleString('en', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                            }),
+                            timestamp: currentTime
+                        };
+                        localStorage.setItem('apiSmsData', JSON.stringify(dataToSave));
+                        $('.side-sms-bal h6').text(balance.toLocaleString('en', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                        }));
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors here
+                        console.error('Error:', error);
+                    }
+                });
+            }
+            
+            // Send SMS To Party
+            $('#bidTable').on('click', '.sendSms', function () {
+                var senderCode = $('#senderCode').val();
+                var tockenCode = $('#tockenCode').val();
+                var sysId = $(this).data('id');
+                // console.log(sysId);
+                // Find the closest row to the clicked button
+                var $row = $(this).closest('tr');
+                var smsCell = $row.find('td:eq(7)');
+                var smsPhoneNo = $row.find('td:eq(1)').text();
+                var prtyAllocQnty = parseFloat($(rows[rowIndex]).find('td:eq(5)').text());
+                if (prtyAllocQnty != 0) {
+                    // Show spinner
+                    var smsMsg = "Your " + prtyAllocQnty + " pcs of Eggs @@" + $('#allocRate').val() + " Order has been confirmed. Bid No: " + $('#bidId').val() + ", " + moment().format("h.mm A, DD/MM/YYYY");
+                    // console.log(smsMsg);
+                    var spinner = $('<div class="spinner-border text-primary" role="status"></div>');
+                    smsCell.empty().append(spinner);
+
+                    swal({
+                        title: "SMS Send Alert",
+                        text: "You are going to send SMS to " + smsPhoneNo,
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#637aae",
+                        confirmButtonText: "Yes, Send SMS",
+                        closeOnConfirm: false
+                    }, function (isConfirmed) {
+                        if (isConfirmed) {
+                            $.ajax({
+                                url: 'https://sysadmin.muthobarta.com/api/v1/send-sms-get?token=' + tockenCode + '&sender_id=' + senderCode + '&receiver=' + smsPhoneNo + '&message=' + smsMsg + '&remove_duplicate=true',
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function (data) {
+                                    // Handle the API response data here
+                                    // console.log(data); // You can use the data in JavaScript as needed
+                                    const apiResponse = data;
+                                    const code = apiResponse.code;
+                                    const message = apiResponse.message;
+                                    if (code == 200) {
+                                        smsCell.html('<i class="fa fa-check" data-toggle="tooltip" data-placement="top" title="SMS Had Been Send Successfully ..."></i>');
+                                        swal("SMS Send!", "SMS Had Been Send Successfully ...", "success");
+                                        $.ajax({
+                                            url: '/Bidding/UpdateSMSStatus',
+                                            method: 'POST',
+                                            data: {
+                                                id: sysId,
+                                                smsSendMsg: smsMsg,
+                                                returnStr: JSON.stringify(apiResponse)
+                                            },
+                                            success: function (response) {
+                                                console.log("SMS Status Updated");
+                                            },
+                                            error: function (error) {
+                                                console.log(error);
+                                            }
+                                        });
+                                    } else {
+                                        smsCell.html('<i class="fa fa-times text-danger" data-toggle="tooltip" data-placement="top" title="' + message + '"></i>');
+                                        swal("Something Wrong !", "Something went wrong... " + message, "success");
+                                    }
+
+                                    // Use the properties as needed
+                                    // console.log("Code:", code); // Output: Code: 200
+                                    // console.log("Message:", message); // Output: Message: SMS
+                                },
+                                error: function (xhr, status, error) {
+                                    // Handle error if needed
+                                    console.error(error);
+                                    smsCell.html('<i class="fa fa-times text-danger" data-toggle="tooltip" data-placement="top" title="' + error.message + '"></i>');
+                                    swal("Something Wrong !", "Something went wrong... " + error.message, "success");
+                                }
+                            });
+                        } else {
+                            // User clicked on the Cancel button
+                            smsCell.html('');
+                        }
+                    });
+                }
+            });
+
+            $(window).scroll(function () {
+                if ($(this).scrollTop() > 300) {
+                    $("#floatingSidebar").fadeIn();
+                }
+            });
+
+            $('#printBid').click(function () {
+                var bidId = $('#bidId').val();
+                //window.location.href = '/Bidding/BidPrint?id=' + bidId;
+                var newWindow = window.open('/Bidding/BidPrint?id=' + bidId, '_blank');
+                newWindow.focus();
+            });
+
+            $('#saveBid').click(function () {
+                // e.preventDefault();
+                $("#saveBid").html("<i class='fa fa-refresh fa-spin'></i> <span> Saving...</span>");
+                $("#saveBid").prop("disabled", true);
+                var bidId = $('#bidId').val();
+                // console.log(bidId);
+                var allocQnty = $('#allocQnty').val() ? $('#allocQnty').val() : 0;
+                var allocRate = $('#allocRate').val() ? $('#allocRate').val() : 0;
+                var bidData = {
+                    BidId: bidId,
+                    AllocQnty: allocQnty,
+                    AllocRate: allocRate
+                };
+                // console.log(bidData);
+                var quantityData = [];
+                $('#bidTable tbody tr').each(function () {
+                    var sysId = $(this).find('.lineSysId').data('id');
+                    var rowAllocQnty = $(this).find('td:eq(5)').text();
+                    var rowAllocRate = allocRate;
+                    quantityData.push({ SysId: sysId, AllocQnty: rowAllocQnty, AllocRate: rowAllocRate });
+                });
+                // console.log(quantityData);
+                // Send the form data using AJAX
+                $.ajax({
+                    url: "/Bidding/BidAllocateSave",
+                    type: "POST",
+                    data: {
+                        id: bidId,
+                        CommBidMstrs: bidData,
+                        CommBidClntBidders: quantityData
+                    },
+                    success: function (response) {
+                        if (response.result == false) {
+                            $("#saveBid").html("<i class='fa  fa-save (alias)'></i>&nbsp;&nbsp; Save");
+                            $("#saveBid").prop("disabled", false);
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                        } else {
+                            $("#saveBid").html("<i class='fa  fa-save (alias)'></i>&nbsp;&nbsp; Save");
+                            $("#saveBid").prop("disabled", false);
+                            swal("Save Done", "Allocation Saved Successfully, To Send SMS Please Click On Send SMS To Party ...", "success");
+                        }
+                    },
+                    error: function (error) {
+                        $("#saveBid").html("<i class='fa  fa-save (alias)'></i>&nbsp;&nbsp; Save");
+                        $("#saveBid").prop("disabled", false);
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                    }
+                });
+            });
+
+            $('#smsBalance').click(function () {
+                // Set the API URL
+                var apiUrl = 'https://sysadmin.muthobarta.com/api/v1/get-balance';
+
+                // Set the Authorization token
+                var authToken = 'Token ' + $('#tockenCode').val();
+
+                // Make the AJAX request
+                $.ajax({
+                    url: apiUrl,
+                    type: 'GET',
+                    beforeSend: function (xhr) {
+                        // Set the Authorization header
+                        xhr.setRequestHeader('Authorization', authToken);
+                    },
+                    success: function (response) {
+                        // Access the properties of the response JSON object
+                        var code = response.code;
+                        var message = response.message;
+                        var balance = response.balance;
+                        var expiry = moment(response.expiry).format("YYYY-MM-DD");
+
+                        // Use the values as needed
+                        // console.log('Code:', code);
+                        // console.log('Message:', message);
+                        // console.log('Balance:', balance);
+                        // console.log('Expire:', expiry);
+                        var currentTime = new Date().getTime();
+                        var dataToSave = {
+                            data: balance.toLocaleString('en', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0,
+                            }),
+                            timestamp: currentTime
+                        };
+                        localStorage.setItem('apiSmsData', JSON.stringify(dataToSave));
+                        $('.side-sms-bal h6').text(balance.toLocaleString('en', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0,
+                        }));
+                        swal("SMS Balance - Tk " + balance.toLocaleString(), "Balance - " + balance.toLocaleString() + ", Expiry Date - " + expiry, "success");
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors here
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+        });
+        // Function to check if a value is numeric
+        function isNumeric(value) {
+            return /^\d+$/.test(value);
+        }
+
+        function toggleSidebar() {
+            var sidebar = document.getElementById('floatingSidebar');
+            if (sidebar.style.display === 'none') {
+                sidebar.style.display = 'block';
+            } else {
+                sidebar.style.display = 'none';
+            }
+        }
+    </script>
+
+    <!--    OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script src="~/lib/jquery-datatable/fixedeader/dataTables.fixedHeader.min.js"></script>
+    <script src="~/lib/editable-table/mindmup-editabletable.js"></script> <!-- Editable Table Plugin Js -->
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

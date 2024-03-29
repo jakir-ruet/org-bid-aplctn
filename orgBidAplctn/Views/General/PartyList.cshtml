@@ -1,0 +1,472 @@
+﻿@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedcolumns.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedheader.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+<!-- Add New Button -->
+<button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addModal">Add New</button>
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Party List </h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table id="list-table" class="table table-bordered table-hover dataTable table-custom" style="width:100% !important;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;">Id</th>
+                                <th style="text-align:center;">Party Name</th>
+                                <th style="text-align:center;">Address</th>
+                                <th style="text-align:center;">Category</th>
+                                <th style="text-align:center;">Contact No</th>
+                                <th style="text-align:center;">Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add/Edit Party</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form fields will be dynamically populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCategory">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            var catTable = $('#list-table').DataTable();
+            retreiveServerData();
+
+            // Function to populate the DataTable with data
+            function retreiveServerData() {
+                catTable.destroy();
+                // Initialize the datatable
+                catTable = $('#list-table').DataTable({
+                    processing: true,
+                    // serverSide: true, // Server Side Processing Disabling
+                    // Paging Setups
+                    paging: true,
+                    // Searching Setups
+                    searching: { regex: true },
+                    contentType: "application/json",
+                    dataType: "json",
+                    order: [[1, 'asc']],
+                    // Set up datatable options and configuration
+                    ajax: {
+                        url: '/General/GetPartyListAjax', // Replace with your actual API endpoint
+                        method: 'GET',
+                        dataSrc: "data",
+                        data: function (d) {
+                            return JSON.stringify(d);
+                        }
+                    },
+                    // Define the columns
+                    columns: [
+                        {
+                            data: 'partyId',
+                            className: 'text-center'
+                        },
+                        { data: 'partyName' },
+                        {
+                            data: null,
+                            render: function (data, type, row) {
+                                var address = row.partyAdd.trim() + ', ' + row.distNm.trim() + ', ' + row.cntryNm.trim();
+                                return address;
+                            }
+                        },
+                        {
+                            data: 'cat',
+                            render: function (data, type, row) {
+                                return data.catName;
+                            }
+                        },
+                        {
+                            data: 'smsContNo',
+                            className: 'text-center'
+                        },
+                        {
+                            data: 'isDiscontinue',
+                            render: function (data, type, row) {
+                                if (data === 0) {
+                                    return '<span class="badge badge-info">Active</span>'; // Display tick mark icon
+                                } else {
+                                    return '<span class="badge badge-danger">Inactive</span>'; // Display nothing for 0
+                                }
+                            },
+                            className: 'text-center'
+                        },
+                        {
+                            data: null, render: function (data, type, row) {
+                                var editBtn = '<button type="button" class="btn btn-primary editCategory" data-id="' + row.partyId.trim() + '" data-toggle="modal" data-target="#addModal"><i class="fa fa-edit"></i></button>';
+                                var deleteBtn = '<button type="button" class="btn btn-danger deleteCategory" data-id="' + row.partyId.trim() + '"><i class="fa fa-trash"></i></button>';
+                                return editBtn + ' ' + deleteBtn;
+                            },
+                            className: 'text-center'
+                        }
+                    ]
+                });
+            }
+
+            // Open Add/Edit Modal
+            $('#addModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var partyId = button.data('id'); // Extract category ID from data-id attribute
+                var modal = $(this);
+                // console.log(partyId);
+
+                // Clear previous form data
+                modal.find('.modal-body').empty();
+
+                // Set modal title based on operation
+                if (partyId) {
+                    modal.find('.modal-title').text('Edit Party');
+                } else {
+                    modal.find('.modal-title').text('Add Party');
+                }
+
+                // Populate form fields if editing
+                if (partyId) {
+                    $.ajax({
+                        url: '/General/GetPartyDetAjax', // Replace with your actual API endpoint
+                        data: { partyId: partyId },
+                        method: 'GET',
+                        success: function (category) {
+                            // Populate form fields with category data
+                            modal.find('.modal-body').html(`
+                                <div class="card">
+                                    <div class="body">
+                                        <input type="hidden" id="partyId" value="${category[0].partyId}">
+                                        <div class="form-group" style="margin-bottom:5px !important;">
+                                            <label for="partyName">Party Name</label>
+                                            <input type="text" class="form-control" id="partyName" value="${category[0].partyName.trim()}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="partyAdd">Party Address</label>
+                                            <textarea class="form-control" rows="3" id="partyAdd">${category[0].partyAdd != null ? category[0].partyAdd.trim() : ''}</textarea>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <label for="distNm">District Name</label>
+                                                <input type="text" class="form-control" id="distNm" value="${category[0].distNm != null ? category[0].distNm.trim() : ''}" required>
+                                            </div>
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <label for="cntryNm">Country Name</label>
+                                                <input type="text" class="form-control" id="cntryNm" value="${category[0].cntryNm != null ? category[0].cntryNm.trim() : ''}" required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:5px !important;">
+                                            <label for="categorySelect">Category</label>
+                                            <select class="form-control" id="categorySelect">
+                                                <!-- Categories will be dynamically populated here -->
+                                            </select>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <label for="smsContNo">SMS No</label>
+                                                <input type="text" class="form-control" maxlength="13" id="smsContNo" value="${category[0].smsContNo != null ? category[0].smsContNo.trim() : ''}" required>
+                                            </div>
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <label for="othContNo">Other Contact No</label>
+                                                <input type="text" class="form-control" id="othContNo" value="${category[0].othContNo != null ? category[0].othContNo.trim() : ''}">
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                            </div>
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <div class="fancy-checkbox">
+                                                    <label><input type="checkbox" id="isDiscontinue" ${category[0].isDiscontinue == 1 ? 'checked' : ''}><span>Discontinue Party</span></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                            if (category[0].isDiscontinue === 1) {
+                                $('#isDiscontinue').prop('checked', true);
+                            } else {
+                                $('#isDiscontinue').prop('checked', false);
+                            }
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                            $.ajax({
+                                url: '/General/SelPartyCatAjax',
+                                method: 'GET',
+                                success: function (categories) {
+                                    var selectCombo = $('#categorySelect'); // Select the select combo by its ID
+                                    // Populate the options in the select combo
+                                    categories.forEach(function (categoriesItem) {
+                                        var option = $('<option>').val(categoriesItem.catId).text(categoriesItem.catName);
+                                        if (categoriesItem.catId === category[0].catId) {
+                                            option.attr('selected', 'selected');
+                                        }
+                                        selectCombo.append(option);
+                                    });
+                                },
+                                error: function () {
+                                    // Handle error if needed
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // Populate form fields for adding a new category
+                    modal.find('.modal-body').html(`
+                        <div class="card">
+                            <div class="body">
+                                <div class="form-group" style="margin-bottom:5px !important;">
+                                    <label for="partyName">Party Name</label>
+                                    <input type="text" class="form-control" id="partyName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="partyAdd">Party Address</label>
+                                    <textarea class="form-control" rows="3" id="partyAdd"></textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="distNm">District Name</label>
+                                        <input type="text" class="form-control" id="distNm" value="Rajshahi" required">
+                                    </div>
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="cntryNm">Country Name</label>
+                                        <input type="text" class="form-control" id="cntryNm" value="Bangladesh" required">
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-bottom:5px !important;">
+                                    <label for="categorySelect">Category</label>
+                                    <select class="form-control" id="categorySelect">
+                                        <!-- Categories will be dynamically populated here -->
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="smsContNo">SMS No</label>
+                                        <input type="text" class="form-control" maxlength="13" id="smsContNo" value="880" required>
+                                    </div>
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="othContNo">Other Contact No</label>
+                                        <input type="text" class="form-control" id="othContNo">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                    </div>
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <div class="fancy-checkbox">
+                                            <label><input type="checkbox" id="isDiscontinue"><span>Discontinue Party</span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    $.ajax({
+                        url: '/General/SelPartyCatAjax',
+                        method: 'GET',
+                        success: function (categories) {
+                            var selectCombo = $('#categorySelect'); // Select the select combo by its ID
+                            // Populate the options in the select combo
+                            categories.forEach(function (category) {
+                                var option = $('<option>').val(category.catId).text(category.catName);
+                                selectCombo.append(option);
+                            });
+                        },
+                        error: function () {
+                            // Handle error if needed
+                        }
+                    });
+                }
+            });
+
+            // Save Category
+            $('#saveCategory').click(function () {
+                // e.preventDefault();
+                $("#saveCategory").html("Saving...");
+                $("#saveCategory").prop("disabled", true);
+
+                var partyId = $('#partyId').val();
+                var name = $('#partyName').val().trim();
+                var partyAdd = $('#partyAdd').val().trim();
+                var distNm = $('#distNm').val().trim();
+                var cntryNm = $('#cntryNm').val().trim();
+                var catId = $('#categorySelect').val();
+                var smsContNo = $('#smsContNo').val().trim();
+                var othContNo = $('#othContNo').val().trim();
+                var status = $('#isDiscontinue').is(':checked') ? 1 : 0;
+
+                if (name.length == 0) {
+                    swal("Blank Data", "You need to give Party Name before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+                if (distNm.length == 0) {
+                    swal("Blank Data", "You need to give District Name before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+                if (cntryNm.length == 0) {
+                    swal("Blank Data", "You need to give Country Name before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+                if (smsContNo.length == 0) {
+                    swal("Blank Data", "You need to give SMS No before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+                // Check if smsContNo has 13 digits and starts with "880"
+                // ^: The string should start with "880".
+                // 880: Matches exactly "880".
+                // \d: Matches any digit (0-9).
+                // {10}: Matches exactly 10 occurrences of the previous \d (totaling 13 digits).
+                // $: The string should end after the 13th digit.
+                var isValidSmsContNo = /^880\d{10}$/.test(smsContNo);
+
+                if (!isValidSmsContNo) {
+                    swal("Invalid SMS No", "You need to give SMS No Start With 880 and contains total 13 digits !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+
+                var partyData = {
+                    PartyId: partyId,
+                    PartyName: name,
+                    PartyAdd: partyAdd,
+                    DistNm: distNm,
+                    CntryNm: cntryNm,
+                    CatId: catId,
+                    SmsContNo: smsContNo,
+                    OthContNo: othContNo,
+                    IsDiscontinue: status
+                };
+                // console.log(partyData);
+
+                $.ajax({
+                    async: false,
+                    url: '/General/AddOrEditPartyDet',
+                    method: 'POST',
+                    data: {
+                        id: partyId,
+                        model: partyData
+                    },
+                    success: function (response) {
+                        if (response.success == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                        } else {
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                            // Close the modal
+                            $('#addModal').modal('hide');
+                            // Reload the DataTable
+                            retreiveServerData();
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                        $("#saveCategory").html("Save");
+                        $("#saveCategory").prop("disabled", false);
+                    }
+                });
+            });
+
+            // Delete Category
+            $('#list-table').on('click', '.deleteCategory', function () {
+                var partyId = $(this).data('id');
+                // console.log(partyId);
+                swal({
+                    title: "Are you sure?",
+                    text: "You will not be able to recover the Party name!",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    confirmButtonText: "Yes, delete it!",
+                    closeOnConfirm: false
+                }, function () {
+                    $.ajax({
+                        url: '/General/DeleteParty', // Replace with your actual API endpoint
+                        method: 'POST',
+                        data: { id: partyId },
+                        success: function (response) {
+                            if (response.success == false) {
+                                var errorMessage = response.message;
+                                showErrorToast(errorMessage);
+                            } else {
+                                // Reload the DataTable
+                                retreiveServerData();
+                                swal("Deleted!", "Party has been deleted.", "success");
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error);
+                            showErrorToast(error.status + ': ' + error.statusText);
+                        }
+                    });
+                });
+            });
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+        });
+
+</script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.colVis.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.html5.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.print.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

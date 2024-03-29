@@ -1,0 +1,260 @@
+﻿@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/fullcalendar5/main.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+    <style>
+        .event-status-0 {
+            background-color: yellow;
+            /* Additional styling for status 0 events */
+        }
+
+        .event-status-1 {
+            background-color: green;
+            /* Additional styling for status 1 events */
+        }
+
+        .event-status-2 {
+            background-color: blue;
+            /* Additional styling for status 2 events */
+        }
+
+        .event-status-3 {
+            background-color: red;
+            /* Additional styling for status 3 events */
+        }
+
+        .event-default {
+            /* Default styling for other events */
+        }
+
+        @@media (max-width: 768px) {
+            .fc-toolbar {
+                /* Adjust the layout for mobile view */
+                flex-direction: column; /* Display items vertically */
+            }
+        }
+    </style>
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+
+
+<div class="row clearfix row-deck">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="body">
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card profile-header">
+            <div class="body" id="partyDetails">
+                <div class="text-center">
+                    <img src="~/images/blank-prod-sml.png" class="rounded-circle m-b-15" alt="">
+                    <div>
+                        <h4 class="mb-0"><strong id="prodName">Product Name</strong> </h4>
+                        <span id="wareName">Warehouse : </span>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">Bid Date</div>
+                    <div class="col-md-6 text-right"><span class="badge badge-success mb-2 mr-2" id="bidDate" style="width: 100px;">Bid Date</span></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">Bid Timing</div>
+                    <div class="col-md-6 text-right">
+                        <span class="badge badge-success mb-2 mr-2" id="startTimeBadge" style="width: 70px;">Strt Time</span>
+                        <span class="badge badge-info mb-2 mr-2" id="endTimeBadge" style="width: 70px;">End Time</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">Bid Qnty</div>
+                    <div class="col-md-6 text-right">
+                        <span class="badge badge-danger mb-2 mr-2" id="bidQnty" style="width: 100px;text-align: right;">Qnty</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">Bid Rate</div>
+                    <div class="col-md-6 text-right">
+                        <span class="badge badge-success mb-2 mr-2" id="bidRate" style="width: 100px;text-align: right;">Rate</span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">No of Attendee</div>
+                    <div class="col-md-6 text-right">
+                        <span class="badge badge-success mb-2 mr-2" id="noAttendee" style="width: 100px; text-align: right;">Attendee</span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">Final Rate</div>
+                    <div class="col-md-6 text-right">
+                        <span class="badge badge-warning mb-2 mr-2" id="finRate" style="width: 100px; text-align: right;">Final Rate</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">Bid Status</div>
+                    <div class="col-md-6 text-right">
+                        <span class="badge badge-warning mb-2 mr-2" id="bidStatus" style="width: 100px; text-align: right;">Status</span>
+                    </div>
+                </div>
+                <hr>
+                <h6>Notes</h6>
+                <span id="notes"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        //https://fullcalendar.io/docs/v3
+        $(document).ready(function () {
+            // Initialize the FullCalendar
+            var calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                themeSystem: 'bootstrap',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+                },
+                initialView: 'timeGridWeek',
+                timeZone: 'local',
+                dayMaxEvents: true,
+                selectable: true,
+                eventClick: function (info) {
+                    // Access the eventId of the clicked event and do something with it
+                    var eventId = info.event.id;
+                    // console.log('Event Id:', eventId);
+                    $.ajax({
+                        url: '/Dashboard/GetBidEventsDetAjax', // Replace with your actual API endpoint
+                        method: 'GET',
+                        dataType: 'json',
+                        data: { bidId: eventId },
+                        success: function (data) {
+                            // console.log(data);
+                            // Update the UI with the fetched data
+                            $('#prodName').text(data[0].prod.prodName);
+                            $('#wareName').text(data[0].warehouse.wareName);
+                            $('#bidDate').text(moment(data[0].bidDate).format('YYYY-MM-DD'));
+                            $('#startTimeBadge').text(moment(data[0].bidStrtTm).format('hh:mm A'));
+                            $('#endTimeBadge').text(moment(data[0].bidEndTm).format('hh:mm A'));
+                            $('#bidQnty').text(data[0].bidQnty.toLocaleString());
+                            $('#bidRate').text(data[0].bidRate.toLocaleString() + " /=");
+                            $('#noAttendee').text(data[0].noOfPartyEng.toLocaleString());
+                            $('#finRate').text(data[0].allocRate.toLocaleString() + " /=");
+                            if (data[0].bidStat == '0') {
+                                $('#bidStatus').text('Draft');
+                            } else if (data[0].bidStat == '1') {
+                                $('#bidStatus').text('Active');
+                            } else if (data[0].bidStat == '2') {
+                                $('#bidStatus').text('Close');
+                            } else if (data[0].bidStat == '3') {
+                                $('#bidStatus').text('Cancelled');
+                            }
+                            // Update the notes
+                            $('#notes').text(data[0].bidNote);
+
+                        },
+                        error: function (error) {
+                            console.error('Error fetching data:', error);
+                        }
+                    });
+                    // Perform further actions like showing event details to the user
+                },
+                events: function (fetchInfo, successCallback, failureCallback) {
+                    // Send an AJAX request to the server to get events data
+                    $.ajax({
+                        url: '/Dashboard/GetBidEvents', // Replace with your actual URL
+                        type: 'GET',
+                        dataType: 'json',
+                        data: {
+                            startDate: fetchInfo.startStr,
+                            endDate: fetchInfo.endStr
+                        },
+                        success: function (response) {
+                            // Process the events data returned by the server
+                            // You might need to manipulate the data to match FullCalendar's event format
+                            var events = response.map(function (eventData) {
+                                return {
+                                    id: eventData.eventId, // Set the eventId as the 'id' property of the event
+                                    title: eventData.title,
+                                    start: eventData.start,
+                                    end: eventData.end,
+                                    status: eventData.status
+                                };
+                            });
+                            successCallback(events);
+                        },
+                        error: function (xhr, status, error) {
+                            // Handle the error
+                            console.error(error);
+                        }
+                    });
+                },
+                eventDidMount: function (arg) {
+                    var eventStatus = arg.event.extendedProps.status;
+                    var eventElement = arg.el;
+                    var textColor = getContrastingTextColor(arg.event.backgroundColor);
+
+                    // Set the background color of the event based on the status
+                    switch (eventStatus) {
+                        case 0: // Status 0
+                            eventElement.style.backgroundColor = 'gray';
+                            break;
+                        case 1: // Status 1
+                            eventElement.style.backgroundColor = 'green';
+                            break;
+                        case 2: // Status 2
+                            eventElement.style.backgroundColor = 'blue';
+                            break;
+                        case 3: // Status 3
+                            eventElement.style.backgroundColor = 'red';
+                            break;
+                        default: // Default background color for other status values
+                            eventElement.style.backgroundColor = 'yellow';
+                            break;
+                    }
+
+                    // Set the text color for the event title based on the background color
+                    arg.el.style.color = textColor;
+                }
+            });
+
+            calendar.render();
+
+            function getContrastingTextColor(backgroundColor) {
+                // Extract RGB values from the backgroundColor object
+                var r = backgroundColor.r;
+                var g = backgroundColor.g;
+                var b = backgroundColor.b;
+
+                // Calculate the luminance of the color
+                var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+                // Return white or black text color based on the luminance
+                return luminance > 0.5 ? 'black' : 'white';
+            }
+
+            // Bind the windowResize event
+            $(window).on('resize', function () {
+                if ($(window).width() < 765) {
+                    calendar.changeView('timeGridDay');
+                    calendar.setOption('contentHeight', 650);
+                }
+            });
+        });
+    </script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="~/lib/fullcalendar5/main.min.js" type="text/javascript"></script><!--/ calender javascripts -->
+    <script src="~/lib/toastr/toastr.js" type="text/javascript"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js" type="text/javascript"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

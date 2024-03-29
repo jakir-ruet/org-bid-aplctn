@@ -1,0 +1,316 @@
+﻿@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedcolumns.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedheader.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+<!-- Add New Button -->
+<button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addModal">Add New</button>
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Warehouse List </h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table id="prod-cat-table" class="table table-bordered table-hover dataTable table-custom" style="width:100% !important;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;">Id</th>
+                                <th style="text-align:center;">Warehouse Name</th>
+                                <th style="text-align:center;">Address</th>
+                                <th style="text-align:center;">Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add/Edit Warehouse</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form fields will be dynamically populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCategory">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            var catTable = $('#prod-cat-table').DataTable();
+            retreiveServerData();
+
+            // Function to populate the DataTable with data
+            function retreiveServerData() {
+                catTable.destroy();
+                // Initialize the datatable
+                catTable = $('#prod-cat-table').DataTable({
+                    processing: true,
+                    // serverSide: true, // Server Side Processing Disabling
+                    // Paging Setups
+                    paging: true,
+                    // Searching Setups
+                    searching: { regex: true },
+                    contentType: "application/json",
+                    dataType: "json",
+                    order: [[1, 'asc']],
+                    // Set up datatable options and configuration
+                    ajax: {
+                        url: '/General/GetWareListAjax', // Replace with your actual API endpoint
+                        method: 'GET',
+                        dataSrc: "data",
+                        data: function (d) {
+                            return JSON.stringify(d);
+                        }
+                    },
+                    // Define the columns
+                    columns: [
+                        {
+                            data: 'wareId',
+                            className: 'text-center'
+                        },
+                        {
+                            data: 'wareName'
+                        },
+                        {   data: 'wareAdd' },
+                        {
+                            data: 'isDiscontinue',
+                            render: function (data, type, row) {
+                                if (data === 0) {
+                                    return '<span class="badge badge-info">Active</span>'; // Display tick mark icon
+                                } else {
+                                    return '<span class="badge badge-danger">Inactive</span>'; // Display nothing for 0
+                                }
+                            },
+                            className: 'text-center'
+                        },
+                        {
+                            data: null, render: function (data, type, row) {
+                                var editBtn = '<button type="button" class="btn btn-primary editCategory" data-id="' + row.wareId + '" data-toggle="modal" data-target="#addModal"><i class="fa fa-edit"></i></button>';
+                                var deleteBtn = '<button type="button" class="btn btn-danger deleteCategory" data-id="' + row.wareId + '"><i class="fa fa-trash"></i></button>';
+                                return editBtn + ' ' + deleteBtn;
+                            },
+                            className: 'text-center'
+                        }
+                    ]
+                });
+            }
+
+            // Open Add/Edit Modal
+            $('#addModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var wareId = button.data('id'); // Extract ID from data-id attribute
+                var modal = $(this);
+                // console.log(wareId);
+
+                // Clear previous form data
+                modal.find('.modal-body').empty();
+
+                // Set modal title based on operation
+                if (wareId) {
+                    modal.find('.modal-title').text('Edit Warehouse');
+                } else {
+                    modal.find('.modal-title').text('Add Warehouse');
+                }
+
+                // Populate form fields if editing
+                if (wareId) {
+                    $.ajax({
+                        url: '/General/GetWareDetAjax', // Replace with your actual API endpoint
+                        data: { warehouseId: wareId },
+                        method: 'GET',
+                        success: function (category) {
+                            // Populate form fields with category data
+                            modal.find('.modal-body').html(`
+                                <div class="card">
+                                    <div class="body">
+                                        <input type="hidden" id="wareId" value="${category[0].wareId}">
+                                        <div class="form-group">
+                                            <label for="wareName">Warehouse Name</label>
+                                            <input type="text" class="form-control" id="wareName" value="${category[0].wareName}">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="wareAdd">Address</label>
+                                            <textarea class="form-control" rows="3" id="wareAdd" required>${category[0].wareAdd}</textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="isDiscontinue">Status</label>
+                                            <select class="custom-select" id="isDiscontinue">
+                                                <option value="0" ${category[0].isDiscontinue == 0 ? 'selected' : ''}>Active</option>
+                                                <option value="1" ${category[0].isDiscontinue == 1 ? 'selected' : ''}>Deactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        }
+                    });
+                } else {
+                    // Populate form fields for adding a new item
+                    modal.find('.modal-body').html(`
+                        <div class="card">
+                            <div class="body">
+                                <div class="form-group">
+                                    <label for="wareName">Warehouse Name</label>
+                                    <input type="text" class="form-control" id="wareName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="wareAdd">Unit</label>
+                                    <textarea class="form-control" rows="3" id="wareAdd" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="isDiscontinue">Status</label>
+                                    <select class="custom-select" id="isDiscontinue">
+                                        <option value="0" selected>Active</option>
+                                        <option value="1">Deactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+
+            // Save
+            $('#saveCategory').click(function () {
+                $("#saveCategory").html("Saving...");
+                $("#saveCategory").prop("disabled", true);
+                var wareId = $('#wareId').val().trim();
+                var name = $('#wareName').val().trim();
+                var wareaddress = $('#wareAdd').val().trim();
+                var status = $('#isDiscontinue').val();
+
+                if (name.length == 0) {
+                    swal("Blank Data", "You need to give Warehouse Name before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+                var warehouseData = {
+                    WareId: wareId,
+                    WareName: name,
+                    WareAdd: wareaddress,
+                    IsDiscontinue: status
+                };
+                // console.log(warehouseData);
+
+                $.ajax({
+                    async: false,
+                    url: '/General/AddOrEditWarehouse',
+                    method: 'POST',
+                    data: {
+                        id: wareId,
+                        model: warehouseData
+                    },
+                    success: function (response) {
+                        if (response.success == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                        } else {
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                            // Close the modal
+                            $('#addModal').modal('hide');
+                            // Reload the DataTable
+                            retreiveServerData();
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                        $("#saveCategory").html("Save");
+                        $("#saveCategory").prop("disabled", false);
+                    }
+                });
+            });
+
+            // Delete 
+            $('#prod-cat-table').on('click', '.deleteCategory', function () {
+                var wareId = $(this).data('id');
+                // console.log(wareId);
+
+                swal({
+                    title: "Are you sure?",
+                    text: "You will not be able to recover the Warehouse name!",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    confirmButtonText: "Yes, delete it!",
+                    closeOnConfirm: false
+                }, function () {
+                    $.ajax({
+                        url: '/General/DeleteWarehouse', // Replace with your actual API endpoint
+                        method: 'POST',
+                        data: { id: wareId },
+                        success: function (response) {
+                            if (response.success == false) {
+                                var errorMessage = response.message;
+                                showErrorToast(errorMessage);
+                            } else {
+                                // Reload the DataTable
+                                retreiveServerData();
+                                swal("Deleted!", "Warehouse has been deleted.", "success");
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error);
+                            showErrorToast(error.status + ': ' + error.statusText);
+                        }
+                    });
+                });
+            });
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+        });
+
+    </script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.colVis.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.html5.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.print.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

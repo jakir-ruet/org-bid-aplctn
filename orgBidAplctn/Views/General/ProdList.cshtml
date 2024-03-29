@@ -1,0 +1,446 @@
+﻿@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedcolumns.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedheader.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+<!-- Add New Button -->
+<button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addModal">Add New</button>
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Product List </h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table id="list-table" class="table table-bordered table-hover dataTable table-custom" style="width:100% !important;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;">Id</th>
+                                <th style="text-align:center;">Product Name</th>
+                                <th style="text-align:center;">Code</th>
+                                <th style="text-align:center;">Category</th>
+                                <th style="text-align:center;">Unit</th>
+                                <th style="text-align:center;">Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add/Edit Product</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form fields will be dynamically populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCategory">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            var catTable = $('#list-table').DataTable();
+            retreiveServerData();
+
+            // Function to populate the DataTable with data
+            function retreiveServerData() {
+                catTable.destroy();
+                // Initialize the datatable
+                catTable = $('#list-table').DataTable({
+                    processing: true,
+                    // serverSide: true, // Server Side Processing Disabling
+                    // Paging Setups
+                    paging: true,
+                    // Searching Setups
+                    searching: { regex: true },
+                    contentType: "application/json",
+                    dataType: "json",
+                    order: [[1, 'asc']],
+                    // Set up datatable options and configuration
+                    ajax: {
+                        url: '/General/GetProdListAjax', // Replace with your actual API endpoint
+                        method: 'GET',
+                        dataSrc: "data",
+                        data: function (d) {
+                            return JSON.stringify(d);
+                        }
+                    },
+                    // Define the columns
+                    columns: [
+                        {
+                            data: 'prodId',
+                            className: 'text-center'
+                        },
+                        { data: 'prodName' },
+                        {
+                            data: 'prodCode',
+                            className: 'text-center'
+                        },
+                        {
+                            data: 'cat',
+                            render: function (data, type, row) {
+                                return data.catName;
+                            }
+                        },
+                        {
+                            data: 'wght',
+                            className: 'text-center'
+                        },
+                        {
+                            data: 'isDiscontinue',
+                            render: function (data, type, row) {
+                                if (data === 0) {
+                                    return '<span class="badge badge-info">Active</span>'; // Display tick mark icon
+                                } else {
+                                    return '<span class="badge badge-danger">Inactive</span>'; // Display nothing for 0
+                                }
+                            },
+                            className: 'text-center'
+                        },
+                        {
+                            data: null, render: function (data, type, row) {
+                                var editBtn = '<button type="button" class="btn btn-primary editCategory" data-id="' + row.prodId.trim() + '" data-toggle="modal" data-target="#addModal"><i class="fa fa-edit"></i></button>';
+                                var deleteBtn = '<button type="button" class="btn btn-danger deleteCategory" data-id="' + row.prodId.trim() + '"><i class="fa fa-trash"></i></button>';
+                                return editBtn + ' ' + deleteBtn;
+                            },
+                            className: 'text-center'
+                        }
+                    ]
+                });
+            }
+
+            // Open Add/Edit Modal
+            $('#addModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var productId = button.data('id'); // Extract category ID from data-id attribute
+                var modal = $(this);
+                // console.log(productId);
+
+                // Clear previous form data
+                modal.find('.modal-body').empty();
+
+                // Set modal title based on operation
+                if (productId) {
+                    modal.find('.modal-title').text('Edit Product');
+                } else {
+                    modal.find('.modal-title').text('Add Product');
+                }
+
+                // Populate form fields if editing
+                if (productId) {
+                    $.ajax({
+                        url: '/General/GetProdDetAjax', // Replace with your actual API endpoint
+                        data: { prodId: productId },
+                        method: 'GET',
+                        success: function (category) {
+                            // Populate form fields with category data
+                            modal.find('.modal-body').html(`
+                                <div class="card">
+                                    <div class="body">
+                                        <input type="hidden" id="prodId" value="${category[0].prodId}">
+                                        <div class="form-group" style="margin-bottom:5px !important;">
+                                            <label for="prodName">Product Name</label>
+                                            <input type="text" class="form-control" id="prodName" value="${category[0].prodName.trim()}">
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <label for="prodCode">Product Code</label>
+                                                <input type="text" class="form-control" id="prodCode" maxlength="5" value="${category[0].prodCode != null ? category[0].prodCode.trim() : ''}">
+                                            </div>
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <label for="barcdId">Barcode</label>
+                                                <input type="text" class="form-control" id="barcdId" maxlength="25" value="${category[0].barcdId != null ? category[0].barcdId.trim() : ''}">
+                                            </div>
+                                        </div>
+                                        <div class="form-group" style="margin-bottom:5px !important;">
+                                            <label for="categorySelect">Category</label>
+                                            <select class="form-control" id="categorySelect">
+                                                <!-- Categories will be dynamically populated here -->
+                                            </select>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <label for="baseUnit">Unit</label>
+                                                <input type="text" class="form-control" id="baseUnit" value="${category[0].wght != null ? category[0].wght.trim() : ''}">
+                                            </div>
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <label for="leadTm">Lead Time</label>
+                                                <input type="number" class="form-control" id="leadTm" value="${category[0].leadTm}">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="prodSpec">Product Specification</label>
+                                            <textarea class="form-control" rows="3" id="prodSpec">${category[0].prodSpec != null ? category[0].prodSpec.trim() : ''}</textarea>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                            </div>
+                                            <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                                <div class="fancy-checkbox">
+                                                    <label><input type="checkbox" id="isDiscontinue"><span>Discontinue Product</span></label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                            if (category[0].isDiscontinue === 1) {
+                                $('#isDiscontinue').prop('checked', true);
+                            } else {
+                                $('#isDiscontinue').prop('checked', false);
+                            }
+                            $.ajax({
+                                url: '/General/SelProdCatAjax',
+                                method: 'GET',
+                                success: function (categories) {
+                                    var selectCombo = $('#categorySelect'); // Select the select combo by its ID
+                                    // Populate the options in the select combo
+                                    categories.forEach(function (categoriesItem) {
+                                        var option = $('<option>').val(categoriesItem.catId).text(categoriesItem.catName);
+                                        if (categoriesItem.catId === category[0].catId) {
+                                            option.attr('selected', 'selected');
+                                        }
+                                        selectCombo.append(option);
+                                    });
+                                },
+                                error: function () {
+                                    // Handle error if needed
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // Populate form fields for adding a new category
+                    modal.find('.modal-body').html(`
+                        <div class="card">
+                            <div class="body">
+                                <div class="form-group" style="margin-bottom:5px !important;">
+                                    <label for="prodName">Product Name</label>
+                                    <input type="text" class="form-control" id="prodName" required>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="prodCode">Product Code</label>
+                                        <input type="text" class="form-control" id="prodCode" maxlength="5" required>
+                                    </div>
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="barcdId">Barcode</label>
+                                        <input type="text" class="form-control" id="barcdId" maxlength="25">
+                                    </div>
+                                </div>
+                                <div class="form-group" style="margin-bottom:5px !important;">
+                                    <label for="categorySelect">Category</label>
+                                    <select class="form-control" id="categorySelect">
+                                        <!-- Categories will be dynamically populated here -->
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="baseUnit">Unit</label>
+                                        <input type="text" class="form-control" id="baseUnit">
+                                    </div>
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="leadTm">Lead Time</label>
+                                        <input type="number" class="form-control" id="leadTm">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="prodSpec">Product Specification</label>
+                                    <textarea class="form-control" rows="3" id="prodSpec"></textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                    </div>
+                                    <div class="form-group col-md-6" style="margin-bottom:5px !important;">
+                                        <div class="fancy-checkbox">
+                                            <label><input type="checkbox"><span>Discontinue Product</span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                    $.ajax({
+                        url: '/General/SelProdCatAjax',
+                        method: 'GET',
+                        success: function (categories) {
+                            var selectCombo = $('#categorySelect'); // Select the select combo by its ID
+                            // Populate the options in the select combo
+                            categories.forEach(function (category) {
+                                var option = $('<option>').val(category.catId).text(category.catName);
+                                selectCombo.append(option);
+                            });
+                        },
+                        error: function () {
+                            // Handle error if needed
+                        }
+                    });
+                }
+            });
+
+            // Save Category
+            $('#saveCategory').click(function () {
+                $("#saveCategory").html("Saving...");
+                $("#saveCategory").prop("disabled", true);
+
+                var productId = $('#prodId').val();
+                var name = $('#prodName').val().trim();
+                var prodCode = $('#prodCode').val().trim();
+                var barcdId = $('#barcdId').val().trim();
+                var catId = $('#categorySelect').val();
+                var unit = $('#baseUnit').val().trim();
+                var leadTime = $('#leadTm').val() ? $('#leadTm').val() : 0;
+                var prodSpec = $('#prodSpec').val().trim();
+                var status = $('#isDiscontinue').is(':checked') ? 1 : 0;
+
+                if (name.length == 0) {
+                    swal("Blank Data", "You need to give Product Name before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+                if (prodCode.length == 0) {
+                    swal("Blank Data", "You need to give Product Code before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+                if (unit.length == 0) {
+                    swal("Blank Data", "You need to give Product Unit before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+
+                var productData = {
+                    ProdId: productId,
+                    ProdName: name,
+                    ProdCode: prodCode,
+                    BarcdId: barcdId,
+                    CatId: catId,
+                    Wght: unit,
+                    ProdSpec: prodSpec,
+                    LeadTm: leadTime,
+                    IsDiscontinue: status
+                };
+                // console.log(productData);
+
+                $.ajax({
+                    async: false,
+                    url: '/General/AddOrEditProdDet',
+                    method: 'POST',
+                    data: {
+                        id: productId,
+                        model: productData
+                    },
+                    success: function (response) {
+                        if (response.success == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                        } else {
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                            // Close the modal
+                            $('#addModal').modal('hide');
+                            // Reload the DataTable
+                            retreiveServerData();
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                        $("#saveCategory").html("Save");
+                        $("#saveCategory").prop("disabled", false);
+                    }
+                });
+            });
+
+            // Delete Category
+            $('#list-table').on('click', '.deleteCategory', function () {
+                var productId = $(this).data('id');
+                // console.log(productId);
+                swal({
+                    title: "Are you sure?",
+                    text: "You will not be able to recover the Product name!",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    confirmButtonText: "Yes, delete it!",
+                    closeOnConfirm: false
+                }, function () {
+                    $.ajax({
+                        url: '/General/DeleteProduct', // Replace with your actual API endpoint
+                        method: 'POST',
+                        data: { id: productId },
+                        success: function (response) {
+                            if (response.success == false) {
+                                var errorMessage = response.message;
+                                showErrorToast(errorMessage);
+                            } else {
+                                // Reload the DataTable
+                                retreiveServerData();
+                                swal("Deleted!", "Product has been deleted.", "success");
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error);
+                            showErrorToast(error.status + ': ' + error.statusText);
+                        }
+                    });
+                });
+            });
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+        });
+
+    </script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.colVis.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.html5.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.print.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

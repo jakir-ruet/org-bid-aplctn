@@ -1,0 +1,216 @@
+﻿@model CommCompInfo
+@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker3.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/lib/select2-bootstrap4-theme/dist/select2-bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+    <style>
+    </style>
+}
+
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="body">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#Settings">Settings</a></li>
+                </ul>
+            </div>
+            <div class="tab-content">
+                <form id="compUpdateForm">
+                    <div class="tab-pane active" id="Settings">
+                        <input type="hidden" id="compId" value="@Model.CompId.ToString()">
+                        <div class="body">
+                            <h6>Basic Information</h6>
+                            <div class="row clearfix">
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group">
+                                        <label for="compName">Company Name</label>
+                                        <input type="text" class="form-control" id="compName" placeholder="Company Name" value="@Model.CompName.Trim()" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="address">Address</label>
+                                        <input type="text" class="form-control" id="address" placeholder="Address" value="@(!string.IsNullOrEmpty(Model.Address) ? Model.Address.Trim() : string.Empty)" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="compArea">Area</label>
+                                        <input type="text" class="form-control" id="compArea" placeholder="Area" value="@(!string.IsNullOrEmpty(Model.CompArea) ? Model.CompArea.Trim() : string.Empty)" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="compDist">District</label>
+                                        <input type="text" class="form-control" id="compDist" placeholder="City" value="@(!string.IsNullOrEmpty(Model.CompDist) ? Model.CompDist.Trim() : string.Empty)" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="compCountry">Country</label>
+                                        <select class="form-control select2-cntry" id="compCountry">
+                                            <!-- Country will be dynamically populated here -->
+                                        </select>
+                                    </div>
+
+                                </div>
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="form-group">
+                                        <label for="contPersn">Contact Person</label>
+                                        <input type="text" class="form-control" id="contPersn" placeholder="Contact Person" value="@(!string.IsNullOrEmpty(Model.ContPersn) ? Model.ContPersn.Trim() : string.Empty)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="contEmail">Email Address</label>
+                                        <input type="email" class="form-control" id="contEmail" placeholder="Contact Email" value="@(!string.IsNullOrEmpty(Model.ContEmail) ? Model.ContEmail.Trim() : string.Empty)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="contOthNo">Contact No</label>
+                                        <input type="text" class="form-control" id="contOthNo" placeholder="Contact No" value="@(!string.IsNullOrEmpty(Model.ContOthNo) ? Model.ContOthNo.Trim() : string.Empty)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="compStrtNo">System Start ID</label>
+                                        <input type="text" class="form-control" id="compStrtNo" placeholder="Start No" value="@(!string.IsNullOrEmpty(Model.CompStrtNo) ? Model.CompStrtNo.Trim() : string.Empty)" disabled>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="defCurr">Default Currency</label>
+                                        <input type="text" class="form-control" id="defCurr" placeholder="Contact No" value="@(!string.IsNullOrEmpty(Model.DefCurr) ? Model.DefCurr.Trim() : string.Empty)" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="UpdateInfo">Update</button> &nbsp;&nbsp;
+                            <button type="button" class="btn btn-default" id="CancelInfo">Cancel</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            // Fetch the country data
+            $.ajax({
+                url: '/General/GetCountryAjax',
+                dataType: 'json',
+                type: 'GET',
+                success: function (data) {
+                    // Initialize Select2 with the fetched data
+                    $('.select2-cntry').select2({
+                        theme: 'bootstrap4',
+                        data: data,
+                    });
+                    // Get the value from the database or Set the default value
+                    var selectedValue = '@(string.IsNullOrEmpty(Model.CompCountry) ? "Bangladesh" : Model.CompCountry)'; // Set default value if null or empty
+
+                    // Set the selected value in Select2
+                    $('.select2-cntry').val(selectedValue).trigger('change');
+                },
+            });
+
+            // Store the initial field values
+            var initialValues = {
+                compName: $('#compName').val(),
+                address: $('#address').val(),
+                compArea: $('#compArea').val(),
+                compDist: $('#compDist').val(),
+                compCountry: $('#compCountry').val(),
+                contPersn: $('#contPersn').val(),
+                contEmail: $('#contEmail').val(),
+                contOthNo: $('#contOthNo').val()
+            };
+            // Handle form submission
+            $('#compUpdateForm').submit(function (event) {
+                event.preventDefault();
+
+                $("#UpdateInfo").html("Saving...");
+                $("#UpdateInfo").prop("disabled", true);
+
+                var compId = $('#compId').val();
+                var compName = $('#compName').val().trim();
+                var address = $('#address').val().trim();
+                var compArea = $('#compArea').val().trim();
+                var compDist = $('#compDist').val().trim();
+                var compCountry = $('#compCountry').val().trim();
+                var contPersn = $('#contPersn').val().trim();
+                var contEmail = $('#contEmail').val().trim();
+                var contOthNo = $('#contOthNo').val().trim();
+
+
+                if (compName.length == 0) {
+                    swal("Blank Data", "You need to give Company Name before Continue !!!", "warning");
+                    $("#UpdateInfo").html("Update");
+                    $("#UpdateInfo").prop("disabled", false);
+                    return false;
+                }
+
+                var companyData = {
+                    CompId: compId,
+                    CompName: compName,
+                    Address: address,
+                    CompArea: compArea,
+                    CompDist: compDist,
+                    CompCountry: compCountry,
+                    ContPersn: contPersn,
+                    ContEmail: contEmail,
+                    ContOthNo: contOthNo
+                };
+                // console.log(companyData);
+
+                $.ajax({
+                    async: false,
+                    url: '/Administration/UpdateCompDet',
+                    method: 'POST',
+                    data: {
+                        model: companyData
+                    },
+                    success: function (response) {
+                        if (response.success == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                            $("#UpdateInfo").html("Update");
+                            $("#UpdateInfo").prop("disabled", false);
+                        } else {
+                            $("#UpdateInfo").html("Update");
+                            $("#UpdateInfo").prop("disabled", false);
+                            swal("Update Done", "Your Given Information Updated Successfully", "success");
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                        $("#UpdateInfo").html("Update");
+                        $("#UpdateInfo").prop("disabled", false);
+                    }
+                });
+            });
+
+            $('#CancelInfo').click(function () {
+                $('#compName').val(initialValues.compName);
+                $('#address').val(initialValues.address);
+                $('#compArea').val(initialValues.compArea);
+                $('#compDist').val(initialValues.compDist);
+                $('#contPersn').val(initialValues.contPersn);
+                $('#contEmail').val(initialValues.contEmail);
+                $('#contOthNo').val(initialValues.contOthNo);
+            });
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+        });
+    </script>
+    < !--OTHER SCRIPTS INCLUDED ON THIS PAGE - START-- >
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

@@ -1,0 +1,231 @@
+﻿@model IEnumerable<CommBidMstr>
+@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/daterangepicker/daterangepicker.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedcolumns.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedheader.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+    <style>
+        @@keyframes flashAnimation {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        #flashMessage {
+            font-size: 18px;
+            font-weight: bold;
+            color: red;
+            animation: flashAnimation 1.5s infinite;
+        }
+    </style>
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="row" style="margin-left: 5px !important; margin-right:5px !important; margin-top: 10px;">
+                <div class="col-lg-6 col-md-6 col-sm-12 header" style="padding:15px !important;">
+                    <h2>Bidding Finalizer </h2>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12" style="padding:15px !important;">
+                    <div class="d-flex flex-row-reverse">
+                        <div id="flashMessage" style="display: none;">Do Not Close Or Refresh The Page Now!</div>
+                    </div>
+                </div>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table id="bidTable" class="table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;">Bid #</th>
+                                <th style="text-align: center;">Date</th>
+                                <th style="text-align: center;">Period</th>
+                                <th style="text-align: center;">Product</th>
+                                <th style="text-align: center;">Warehouse</th>
+                                <th style="text-align: center;">Party #</th>
+                                <th style="text-align: center;">Qnty</th>
+                                <th style="text-align: center;">Bid Rate</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var bidder in Model)
+                            {
+                            <tr>
+                                <td align="center">@bidder.BidId</td>
+                                <td align="center">@bidder.BidDate.ToString("dd-MMM-yyyy")</td>
+                                <td align="center" data-bid-start="@bidder.BidStrtTm.ToString("s", System.Globalization.CultureInfo.InvariantCulture)" data-bid-end="@bidder.BidEndTm.ToString("s", System.Globalization.CultureInfo.InvariantCulture)" data-bid-smsproc="@bidder.BidSmsProcStat">@bidder.BidStrtTm.ToString("hh:mm tt") - @bidder.BidEndTm.ToString("hh:mm tt")</td>
+                                <td>@bidder.Prod.ProdName</td>
+                                <td>@bidder.Warehouse.WareName</td>
+                                <td align="center">@bidder.NoOfPartyEng</td>
+                                <td align="right">@bidder.BidQnty.ToString("#,##0")</td>
+                                <td align="right">@bidder.BidRate.ToString("#,##0.00")</td>
+                                <td align="center"><span class="badge badge-warning">Active</span></td>
+                                <td align="center">
+                                    @if (bidder.BidSmsProcStat == 1)
+                                    {
+                                        <button type="button" class="btn btn-secondary btn-sm procBid" data-id="@bidder.BidId" title="Process Bid"> Re-process</button>
+                                        @if (DateTime.Now > bidder.BidEndTm)
+                                        {
+                                            <button type="button" class="btn btn-primary btn-sm allocBid" data-id="@bidder.BidId" title="Allocate Bid"><i class="fa fa-edit"></i></button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @if (DateTime.Now > bidder.BidStrtTm && DateTime.Now < bidder.BidEndTm)
+                                        {
+                                            <button type="button" class="btn btn-warning btn-sm procBid" data-id="@bidder.BidId" title="Process Bid"> Ongoing</button>
+                                        } else {
+                                            <button type="button" class="btn btn-secondary btn-sm procBid" data-id="@bidder.BidId" title="Process Bid"> Process</button>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            // Send SMS To Party
+            $('.procBid').click(function () {
+                var sysId = $(this).data('id');
+                // console.log(sysId);
+                // var buttonValue = $(this).val();
+                var $clickedButton = $(this);
+                // console.log($clickedButton.text());
+                if ($clickedButton.text() == "Ongoing") {
+                    swal("Ongoing Bid !", "The Bid Is In The Middle Of The State ! You Cannot Process Now !", "warning");
+                    return false;
+                }
+                swal({
+                    title: "Bid Finalizing Alert",
+                    text: "You are going to finalize Bid # " + sysId + ", <br>Do you want to proceed ?",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#637aae",
+                    confirmButtonText: "Yes, Process",
+                    closeOnConfirm: false,
+                    html: true
+                }, function (isConfirmed) {
+                    if (isConfirmed) {
+                        flashMessage.style.display = "block";
+                        $clickedButton.html("<i class='fa fa-refresh fa-spin'></i> <span>Processing...</span>");
+                        $clickedButton.prop("disabled", true);
+                        $.ajax({
+                            url: '/Bidding/FinalizeBid',
+                            method: 'POST',
+                            data: { id: sysId },
+                            success: function (response) {
+                                if (response.success == false) {
+                                    flashMessage.style.display = "none";
+                                    $clickedButton.html(" Process");
+                                    $clickedButton.prop("disabled", false);
+                                    var errorMessage = response.message;
+                                    showErrorToast(errorMessage);
+                                } else {
+                                    swal({
+                                        title: "Bid Processing Completed!",
+                                        text: "Bid Processing Completed Successfully.",
+                                        type: "success"
+                                    }, function () {
+                                        swal.close();
+                                        // Reload the page after the Sweet Alert is closed
+                                        // window.location.reload();
+                                    });
+                                    flashMessage.style.display = "none";
+                                    $clickedButton.html("Re-Process");
+                                    $clickedButton.prop("disabled", false);
+                                    window.location.href = '/Bidding/BidAllocate?id=' + sysId;
+                                }
+                            },
+                            error: function (error) {
+                                flashMessage.style.display = "none";
+                                console.log(error);
+                                showErrorToast(error.status + ': ' + error.statusText);
+                            }
+                        });
+                        swal.close();
+                    } else {
+                        // User clicked on the Cancel button
+
+                    }
+                });
+
+            });
+
+            // Edit Bid
+            $('.allocBid').click(function () {
+                var bidId = $(this).data('id');
+                // console.log(bidId);
+                window.location.href = "/Bidding/BidAllocate?id=" + bidId;
+            });
+
+            updateButtonStatus();
+
+            // Call the function every 30 seconds
+            setInterval(updateButtonStatus, 30000);
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+
+        });
+        function updateButtonStatus() {
+            var currentTime = moment();
+            $('#bidTable tbody tr').each(function () {
+                var bidStart = moment($(this).find('td[data-bid-start]').data('bid-start'));
+                var bidEnd = moment($(this).find('td[data-bid-end]').data('bid-end'));
+                // bidStart.subtract(1, 'minutes');
+                bidEnd.add(1, 'minutes');
+                var bidSmsProcStat = $(this).find('td[data-bid-smsproc]').data('bid-smsproc');
+                // console.log(currentTime + ', ' + bidStart + ', ' + bidEnd);
+                var button = $(this).find('td .procBid');
+                // var buttonClass = currentTime > bidStart && currentTime < bidEnd ? 'btn-warning' : 'btn-secondary';
+                // var buttonText = currentTime > bidStart && currentTime < bidEnd ? 'Ongoing' : (bidSmsProcStat == 0) ? 'Process' : 'Re-process';
+                // Event If Below End Time, It Shows Always Ongoing ...
+                var buttonClass = currentTime < bidEnd ? 'btn-warning' : 'btn-secondary';
+                var buttonText = currentTime < bidEnd ? 'Ongoing' : (bidSmsProcStat == 0) ? 'Process' : 'Re-process';
+
+                button.removeClass('btn-warning btn-secondary').addClass(buttonClass).text(buttonText);
+            });
+        }
+
+    </script>
+
+    <!--    OTHER SCRIPTS INCLUDED ON THIS PAGE - START    -->
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.colVis.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.html5.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.print.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

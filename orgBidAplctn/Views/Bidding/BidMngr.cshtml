@@ -1,0 +1,803 @@
+﻿@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/daterangepicker/daterangepicker.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
+    <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/lib/select2-bootstrap4-theme/dist/select2-bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <link rel="stylesheet" href="~/lib/clockpicker/bootstrap-clockpicker.min.css">
+    <link rel="stylesheet" href="~/lib/dual-list-box/dist/dual-listbox.css" />
+
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+}
+<style>
+    .daterangepicker .applyBtn {
+        background-color: dodgerblue !important;
+    }
+
+    .btn-filter {
+        margin: 2px !important; /* Add spacing between buttons */
+    }
+
+    /* Adjust layout for small devices (tablets and below) */
+    @@media (max-width: 991.98px) {
+      .header {
+        text-align: center; /* Center the header text */
+        margin-bottom: 10px; /* Add spacing between header and buttons */
+      }
+
+      .page_action {
+        justify-content: center; /* Center the buttons */
+      }
+
+      .btn-filter {
+        margin: 2px !important; /* Add spacing between buttons */
+      }
+    }
+
+    /* Style for #dateRangeInput in non-mobile views */
+    #dateRangeInput {
+        background: #fff;
+        cursor: pointer;
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        width: 100%;
+    }
+
+    /* Style for #dateRangeInput in mobile views (max-width: 767px) */
+    @@media (max-width: 767px) {
+        #dateRangeInput {
+            width: auto;
+            margin-bottom: 10px; /* Add some space at the bottom */
+        }
+
+        /* Adjust the layout of the DataTable top menu for mobile view */
+        .table-responsive {
+            overflow-x: auto; /* Allow horizontal scrolling for small screens */
+        }
+
+        .dataTables_wrapper .row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+        }
+
+        .dataTables_length,
+        .dataTables_filter {
+            flex: 1 1 100%; /* Make each item take full width in mobile view */
+            margin-bottom: 5px;
+        }
+    }
+</style>
+
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+<!-- Add New Button -->
+<button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addModal">Add New</button>
+<button class="btn btn-info mb-3 exportToExcel pull-right" id="exportToExcel"><i class='fa fa-file-excel-o'></i> <span>&nbsp; Export</span></button>
+
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="row" style="margin-left: 5px !important; margin-right:5px !important; margin-top: 10px;">
+                <div class="col-lg-6 col-md-6 col-sm-12 header" style="padding:15px !important;">
+                    <h2>Bidding Manager </h2>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-12" style="padding:15px !important;">
+                    <div class="d-flex flex-row-reverse justify-content-between">
+                        <div class="page_action d-flex flex-wrap">
+                            <button type="button" class="btn mb-1 btn-simple btn-sm btn-default btn-filter" data-target="all">All</button>
+                            <button type="button" class="btn mb-1 btn-simple btn-sm btn-secondary btn-filter" data-target="draft">Draft</button>
+                            <button type="button" class="btn mb-1 btn-simple btn-sm btn-warning btn-filter" data-target="active">Active</button>
+                            <button type="button" class="btn mb-1 btn-simple btn-sm btn-info btn-filter" data-target="close">Closed</button>
+                            <button type="button" class="btn mb-1 btn-simple btn-sm btn-danger btn-filter" data-target="cancel">Cancelled</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="body" style="padding-top:0px !important;">
+                <div class="table-responsive">
+                    <div class="col-xs-6 col-sm-5 col-md-3 pull-right" style="padding-right: 0px;">
+                        <div id="dateRangeInput" style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+                            <i class="fa fa-calendar"></i>&nbsp;
+                            <span></span> &nbsp; <i class="fa fa-caret-down"></i>
+                        </div>
+                    </div>
+                    <table id="bidTable" class="table table-striped table-bordered display nowrap" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th style="text-align: center;" data-priority="1">Bid #</th>
+                                <th style="text-align: center;" data-priority="1">Date</th>
+                                <th style="text-align: center;">Period</th>
+                                <th style="text-align: center;" data-priority="1">Product</th>
+                                <th style="text-align: center;">Party #</th>
+                                <th style="text-align: center;">Qnty</th>
+                                <th style="text-align: center;">Bid Rate</th>
+                                <th style="text-align: center;">Alloc Rate</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add/Edit Bid</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="body">
+                        <form id="wizard_horizontal" method="POST">
+                            <h2>Bid Manager</h2>
+                            <fieldset>
+                                <div class="form-row">
+                                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                                        <label for="bidId">Bid Id</label>
+                                        <input type="text" class="form-control" id="bidId" readonly>
+                                    </div>
+                                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                                        <label for="bidDt">Bid Date *</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="icon-calendar"></i></span>
+                                            </div>
+                                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="Bid Date" id="bidDt" autocomplete="off" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                                        <label for="startTm">Start Time *</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="icon-clock"></i></span>
+                                            </div>
+                                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="Start Time" id="startTm" autocomplete="off" maxlength="5" oninput="restrictInputToNumbersAndColon(this);" required>
+                                        </div>
+                                    </div>
+                                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                                        <label for="endTm">End Time *</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="icon-clock"></i></span>
+                                            </div>
+                                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="End Time" id="endTm" autocomplete="off" maxlength="5" oninput="restrictInputToNumbersAndColon(this);" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="prodList">Product Name *</label>
+                                        <select class="form-control select2-prod" id="prodList" required>
+                                            <!-- Product will be dynamically populated here -->
+                                        </select>
+                                    </div>
+                                    <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="wareList">Warehouse Name *</label>
+                                        <select class="form-control select2-ware" id="wareList" required>
+                                            <!-- Warehouse will be dynamically populated here -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                                        <label for="bidQnty">Bid Qnty *</label>
+                                        <input type="number" class="form-control" id="bidQnty" required>
+                                    </div>
+                                    <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                                        <label for="bidRate">Bid Rate *</label>
+                                        <input type="number" class="form-control" id="bidRate" required>
+                                    </div>
+                                    <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                                        <label for="bidStat">Bid Status</label>
+                                        <select class="custom-select" id="bidStat" disabled>
+                                            <option value="0" selected>Draft</option>
+                                            <option value="1">Active</option>
+                                            <option value="2">Closed</option>
+                                            <option value="3">Canceled</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group form-float" style="margin-bottom:5px !important;">
+                                    <label for="bidNote">Notes</label>
+                                    <textarea class="form-control" rows="3" id="bidNote"></textarea>
+                                </div>
+                            </fieldset>
+                            <h2>Select Party</h2>
+                            <fieldset>
+                                <div class="form-group form-float" style="margin-bottom:5px !important;">
+                                    <label for="bidParty">Bidding Party List</label>
+                                    <select class="selParty" multiple></select>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            // Function to show the loader
+            function showLoader() {
+                $('.page-loader-wrapper').fadeIn();
+            }
+
+            // Function to hide the loader
+            function hideLoader() {
+                $('.page-loader-wrapper').fadeOut();
+            }
+            var StartDate = moment().subtract(6, 'days');
+            var EndDate = moment().add(3, 'days');
+
+            // Initialize the datatable
+            var bidTable = $('#bidTable').DataTable();
+
+            loadAllInfo();
+
+            function loadAllInfo() {
+                showLoader();
+
+                // Fetch the Product data
+                $.ajax({
+                    url: '/Bidding/GetProductAjax',
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function (data) {
+                        // Initialize Select2 with the fetched data
+                        $('.select2-prod').select2({
+                            theme: 'bootstrap4',
+                            data: data,
+                        });
+                        $('.select2-prod').trigger('change');
+                    },
+                });
+
+                // Fetch the Warehouse data
+                $.ajax({
+                    url: '/Bidding/GetWarehouseAjax',
+                    dataType: 'json',
+                    type: 'GET',
+                    success: function (data) {
+                        // Initialize Select2 with the fetched data
+                        $('.select2-ware').select2({
+                            theme: 'bootstrap4',
+                            data: data,
+                        });
+                        $('.select2-ware').trigger('change');
+                    },
+                });
+
+                // Initialize Party Dual List Box
+                $.ajax({
+                    url: '/Bidding/GetPartyAjax', // Replace with your API endpoint URL
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function (data) {
+                        // Clear existing options in the DualListBox
+                        $('.selParty').empty();
+
+                        // Add each party name to the DualListBox
+                        data.forEach(function (partyName) {
+                            $('.selParty').append($('<option>', {
+                                value: partyName.id, // Replace with the value property for the party
+                                text: partyName.text,   // Replace with the text property for the party
+                            }));
+                        });
+
+                        // Initialize the DualListBox
+                        let dlb1 = new DualListbox('.selParty', {
+                            availableTitle: 'Available Party',
+                            selectedTitle: 'Selected Party',
+                            addButtonText: '>',
+                            removeButtonText: '<',
+                            addAllButtonText: '>>',
+                            removeAllButtonText: '<<',
+                            searchPlaceholder: 'Search Party',
+                        });
+                    },
+                    error: function (error) {
+                        console.log('Error loading party names: ' + error);
+                    },
+                });
+
+                hideLoader();
+            }
+
+            // Initialize Wizard
+            var form = $('#wizard_horizontal').show();
+            form.steps({
+                headerTag: 'h2',
+                bodyTag: 'fieldset',
+                transitionEffect: 'fade',
+                onInit: function (event, currentIndex) {
+                    //Set tab width
+                    var $tab = $(event.currentTarget).find('ul[role="tablist"] li');
+                    var tabCount = $tab.length;
+                    $tab.css('width', (100 / tabCount) + '%');
+
+                    setButtonWavesEffect(event);
+                },
+                onStepChanging: function (event, currentIndex, newIndex) {
+                    // console.log(currentIndex);
+                    // console.log(newIndex);
+                    if (currentIndex > newIndex) { return true; }
+
+                    if (currentIndex < newIndex) {
+                        form.find('.body:eq(' + newIndex + ') label.error').remove();
+                        form.find('.body:eq(' + newIndex + ') .error').removeClass('error');
+                    }
+
+                    form.validate().settings.ignore = ':disabled,:hidden';
+                    if (currentIndex == 0) {
+                        // Convert the time strings to Date objects
+                        var tstStrtTime = new Date($('#bidDt').val() + " " + $('#startTm').val());
+                        var tstEndTime = new Date($('#bidDt').val() + " " + $('#endTm').val());
+
+                        // Calculate the time difference in milliseconds
+                        var tstTimeDiff = tstEndTime - tstStrtTime;
+                        if (tstTimeDiff < 0) {
+                            swal("Invalid Time", "You need to give Proper Time before Continue !!!", "warning");
+                            return false;
+                        }
+                        var prodId = ($('#prodList').val() !== null) ? $('#prodList').val() : '';
+                        var wareId = ($('#wareList').val() !== null) ? $('#wareList').val() : '';
+                        var bidQnty = $('#bidQnty').val() ? $('#bidQnty').val() : 0;
+                        var bidRate = $('#bidRate').val() ? $('#bidRate').val() : 0;
+                        if (prodId.length == 0) {
+                            swal("Blank Data", "You need to give Product Name before Continue !!!", "warning");
+                            return false;
+                        }
+                        if (wareId.length == 0) {
+                            swal("Blank Data", "You need to give Warehouse Name before Continue !!!", "warning");
+                            return false;
+                        }
+                        if (bidQnty == 0) {
+                            swal("Blank Data", "You need to give Bid Quantity before Continue !!!", "warning");
+                            return false;
+                        }
+                        if (bidRate == 0) {
+                            swal("Blank Data", "You need to give Bid Rate before Continue !!!", "warning");
+                            return false;
+                        }
+                    } else {
+
+                    }
+                    return form.valid();
+                },
+                onStepChanged: function (event, currentIndex, priorIndex) {
+                    setButtonWavesEffect(event);
+                },
+                onFinishing: function (event, currentIndex) {
+                    form.validate().settings.ignore = ':disabled';
+                    // Get the selected party values from the DualListBox
+                    var selectedParty = $('.selParty').val();
+
+                    // Check if any party is selected
+                    if (selectedParty === null || selectedParty.length == 0) {
+                        swal("Blank Data", "You need to give Party Name before Continue !!!", "warning");
+                        return false;
+                    }
+                    return form.valid();
+                },
+                onFinished: function (event, currentIndex) {
+                    // console.log("In Finsih Click ...");
+                    var bidId = $('#bidId').val();
+                    var bidDt = $('#bidDt').val();
+                    var startTm = $('#startTm').val();
+                    var endTm = $('#endTm').val();
+                    var prodId = $('#prodList').val();
+                    var wareId = $('#wareList').val();
+                    var bidQnty = $('#bidQnty').val() ? $('#bidQnty').val() : 0;
+                    var bidRate = $('#bidRate').val() ? $('#bidRate').val() : 0;
+                    var bidNote = $('#bidNote').val() ? $('#bidNote').val().trim() : "";
+                    var bidStat = $('#bidStat').val();
+
+                    // Convert the time strings to Date objects
+                    var tstStrtTime = new Date(bidDt + " " + startTm);
+                    var tstEndTime = new Date(bidDt + " " + endTm);
+
+                    // Calculate the time difference in milliseconds
+                    var tstTimeDiff = tstEndTime - tstStrtTime;
+                    if (tstTimeDiff < 0) {
+                        swal("Invalid Time", "You need to give Proper Time before Continue !!!", "warning");
+                        return false;
+                    }
+                    var startTm = $('#bidDt').val() + ' ' + $('#startTm').val();
+                    var endTm = $('#bidDt').val() + ' ' + $('#endTm').val();
+                    var bidData = {
+                        BidId: bidId,
+                        BidDate: bidDt,
+                        BidStrtTm: startTm,
+                        BidEndTm: endTm,
+                        ProdId: prodId,
+                        WareId: wareId,
+                        BidQnty: bidQnty,
+                        BidRate: bidRate,
+                        BidNote: bidNote,
+                        BidStat: bidStat
+                    };
+                    // console.log(bidData);
+                    // Get the selected party values from the DualListBox
+                    var selectedParties = $('.selParty').val();
+                    // Use the selectedParties array as needed (e.g., submit it to the server)
+                    var list = [];
+                    // console.log('Before Pushing List');
+                    // For example, if you want to show the selected values in the console:
+                    selectedParties.forEach(function (partyId) {
+                        // Create an object with "PartyId" and its corresponding value
+                        var bidPartyList = {
+                            PartyId: partyId
+                        };
+                        // console.log(bidPartyList);
+                        list.push(bidPartyList);
+                    });
+                    // console.log(list);
+
+                    // Send the form data using AJAX
+                    $.ajax({
+                        url: "/Bidding/BidAddProc", // Replace with your server-side URL to handle form submission
+                        type: "POST",
+                        data: {
+                            id: bidId,
+                            CommBidMstrs: bidData,
+                            CommBidClntBidders: list
+                        },
+                        success: function (response) {
+                            if (response.result == false) {
+                                console.log(response.message);
+                                var errorMessage = response.message;
+                                showErrorToast(errorMessage);
+                            } else {
+                                // Close the modal
+                                $('#addModal').modal('hide');
+                                // Reload the DataTable
+                                retreiveServerData();
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error);
+                            showErrorToast(error.status + ': ' + error.statusText);
+                        }
+                    });
+                }
+            });
+
+            form.validate({
+                highlight: function (input) {
+                    $(input).parents('.form-line').addClass('error');
+                },
+                unhighlight: function (input) {
+                    $(input).parents('.form-line').removeClass('error');
+                },
+                errorPlacement: function (error, element) {
+                    $(element).parents('.form-group').append(error);
+                },
+                rules: {
+                    'confirm': {
+                        equalTo: '#password'
+                    },
+                    'prodList': {
+                        select2Required: true // Add the custom validation rule for the Select2 list
+                    }
+                }
+            });
+
+            // Initialize the DateRangePicker
+            $('#dateRangeInput').daterangepicker({
+                // Configuration options for the DateRangePicker
+                startDate: StartDate,
+                endDate: EndDate,
+                ranges: {
+                    'Today': [moment(), moment()],
+                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                    'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                },
+                showCustomRangeLabel: true, // Set to true to show the "Apply" button
+                alwaysShowCalendars: true,
+            }, cb);
+            cb(StartDate, EndDate);
+
+            function cb(start, end) {
+                StartDate = start;
+                EndDate = end;
+                $('#dateRangeInput span').html(StartDate.format('MMM D, YYYY') + ' - ' + EndDate.format('MMM D, YYYY'));
+                // console.log('Function cb ' + StartDate.format('YYYY - MM - DD'));
+                retreiveServerData();
+            }
+
+            function retreiveServerData() {
+                bidTable.destroy();
+                // console.log('@ViewBag.BidStatus');
+                var url;
+                if ('@ViewBag.BidStatus' === 'ALL') {
+                    url = '/Bidding/GetBidListAjax?startDate=' + StartDate.format('YYYY-MM-DD') + '&endDate=' + EndDate.format('YYYY-MM-DD');
+                } else if ('@ViewBag.BidStatus' === 'Draft') {
+                    url = '/Bidding/GetBidListCustAjax?BidStatus=0';
+                } else if ('@ViewBag.BidStatus' === 'Active') {
+                    url = '/Bidding/GetBidListCustAjax?BidStatus=1';
+                }
+                // Initialize the datatable
+                bidTable = $('#bidTable').DataTable({
+                    // Design Assets
+                    // stateSave: true,
+                    autoWidth: true,
+                    responsive: true,
+                    // ServerSide Setups
+                    processing: true,
+                    serverSide: true,
+                    // Paging Setups
+                    paging: true,
+                    // Searching Setups
+                    searching: { regex: true },
+                    order: [[1, 'desc']],
+                    // Set up datatable options and configuration
+                    ajax: {
+                        url: url,
+                        type: "POST",
+                        contentType: "application/json",
+                        dataType: "json",
+                        data: function (d) {
+                            // Add DataTables parameters to the request
+                            d.draw = d.draw || 1; // DataTables draw counter
+                            d.start = d.start || 0; // DataTables start point
+                            d.length = d.length || 10; // DataTables page length
+                            d.search = d.search || {}; // DataTables search object
+                            d.search.value = d.search.value || ''; // DataTables global search value
+                            return JSON.stringify(d);
+                        }
+                    },
+                    columns: [
+                        { data: 'bidId', name: "BidId", className: 'text-center' },
+                        {
+                            data: 'bidDate',
+                            name: 'BidDate',
+                            render: function (data, type, row) {
+                                // If display or filter data is requested, format the date
+                                return moment(data).format("DD-MMM-YYYY");
+                            },
+                            className: 'text-center'
+                        },
+                        {
+                            data: 'bidStrtTm',
+                            name: 'BidStrtTm',
+                            render: function (data, type, row) {
+                                var timePeriod = moment(row.bidStrtTm).format("hh:mm A") + ' - ' + moment(row.bidEndTm).format("hh:mm A");
+                                return timePeriod;
+                            },
+                            className: 'text-center'
+                        },
+                        { data: 'prod.prodName', name: 'ProdName' },
+                        { data: 'noOfPartyEng', name: 'NoOfPartyEng', className: 'text-center' },
+                        {
+                            data: 'bidQnty',
+                            name: 'BidQnty',
+                            render: function (data, type, row) {
+                                return data.toLocaleString();
+                            },
+                            className: 'text-right'
+                        },
+                        {
+                            data: 'bidRate',
+                            name: 'BidRate',
+                            render: function (data, type, row) {
+                                return data.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            },
+                            className: 'text-right'
+                        },
+                        {
+                            data: 'allocRate',
+                            name: 'AllocRate',
+                            render: function (data, type, row) {
+                                return data.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            },
+                            className: 'text-right'
+                        },
+                        {
+                            data: 'bidStat',
+                            name: 'BidStat',
+                            render: function (data, type, row) {
+                                if (data === 0) {
+                                    return '<span class="badge badge-secondary">Draft</span>';
+                                } else if (data === 1) {
+                                    return '<span class="badge badge-warning">Active</span>';
+                                } else if (data === 2) {
+                                    return '<span class="badge badge-info">Close</span>';
+                                } else {
+                                    return '<span class="badge badge-danger">Cancel</span>';
+                                }
+                            },
+                            className: 'text-center'
+                        },
+                        {
+                            data: null, render: function (data, type, row) {
+                                var editBtn = '<button type="button" class="btn btn-primary editCategory" data-id="' + row.bidId.toString() + '"><i class="fa fa-edit"></i></button>';
+                                // Check the value of bidStat in the row
+                                if (row.bidStat === 0) {
+                                    var deleteBtn = '<button type="button" class="btn btn-danger deleteCategory" data-id="' + row.bidId.toString() + '"><i class="fa fa-trash"></i></button>';
+                                } else { var deleteBtn = ''; }
+                                return editBtn + ' ' + deleteBtn;
+                            },
+                            className: 'text-center'
+                        }
+                    ],
+                    createdRow: function (row, data, dataIndex) {
+                        // Get the bidStat value for the current row
+                        var bidStat = data.bidStat;
+
+                        // Set the data-status attribute based on bidStat
+                        if (bidStat === 0) {
+                            $(row).attr('data-status', 'draft');
+                        } else if (bidStat === 1) {
+                            $(row).attr('data-status', 'active');
+                        } else if (bidStat === 2) {
+                            $(row).attr('data-status', 'close');
+                        } else {
+                            $(row).attr('data-status', 'cancel');
+                        }
+                    }
+                });
+            };
+
+            $('.btn-filter').on('click', function () {
+                var $target = $(this).data('target');
+                if ($target != 'all') {
+                    $('.table tbody tr').css('display', 'none');
+                    $('.table tbody tr[data-status="' + $target + '"]').fadeIn('slow');
+                } else {
+                    $('.table tbody tr').css('display', 'none').fadeIn('slow');
+                }
+            });
+
+            // Edit Bid
+            $('#bidTable').on('click', '.editCategory', function () {
+                var bidId = $(this).data('id');
+                // console.log(bidId);
+                window.location.href = "/Bidding/BidMngrEdit?id=" + bidId;
+            });
+
+            // Open Add/Edit Modal
+            $('#addModal').on('show.bs.modal', function (event) {
+                $('#bidDt').daterangepicker({
+                    singleDatePicker: true, // For a single date selection
+                    autoclose: true, // Close the datepicker on selection
+                    showDropdowns: true, // Show year and month dropdowns
+                    startDate: moment(), // Set the default date to today
+                    locale: {
+                        format: 'DD-MMM-YYYY', // Set the desired date format
+                    },
+                });
+                $('#startTm').clockpicker({
+                    placement: 'bottom',
+                    align: 'left',
+                    autoclose: true,
+                    default: 'now', // Default time to show on the clockpicker
+                    donetext: 'Done'
+                });
+                $('#endTm').clockpicker({
+                    placement: 'bottom',
+                    align: 'left',
+                    autoclose: true,
+                    default: 'now', // Default time to show on the clockpicker
+                    donetext: 'Done'
+                });
+                
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var categoryId = button.data('id'); // Extract category ID from data-id attribute
+                var modal = $(this);
+                // console.log(categoryId);
+
+                // Set modal title based on operation
+                if (categoryId) {
+                    modal.find('.modal-title').text('Edit Bid');
+                } else {
+                    modal.find('.modal-title').text('Add Bid');
+                }
+
+                // Populate form fields if editing
+                if (categoryId) {
+
+                } else {
+                    modal.find('#bidId').val('<< AUTO >>');
+                    modal.find('#bidDt').val('');
+                    modal.find('#startTm').val('');
+                    modal.find('#endTm').val('');
+                    modal.find('#prodList').val('');
+                    $('.select2-prod').trigger('change');
+                    modal.find('#wareList').val('');
+                    $('.select2-ware').trigger('change');
+                    modal.find('#bidQnty').val('');
+                    modal.find('#bidRate').val('');
+                    modal.find('#bidStat').val(0);
+                }
+            });
+
+            $('#exportToExcel').click(function () {
+                // Get the start and end time from the DateRangePicker
+                var startDate = StartDate.format('YYYY-MM-DD');
+                var endDate = EndDate.format('YYYY-MM-DD');
+
+                // Call the AJAX function to export data to Excel
+                $.ajax({
+                    url: '/Bidding/GetBidListExcelAjax?startDate=' + StartDate.format('YYYY-MM-DD') + '&endDate=' + EndDate.format('YYYY-MM-DD') + '&starRating=' + $('#ratingList').val(),
+                    type: 'POST',
+                    xhrFields: {
+                        responseType: 'blob' // This is important to handle binary data for file download
+                    },
+                    success: function (data) {
+                        // Create a temporary anchor element to trigger the file download
+                        var blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                        var url = URL.createObjectURL(blob);
+
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'BidsList.xlsx';
+                        document.body.appendChild(a);
+                        a.click();
+
+                        // Clean up after the download
+                        window.URL.revokeObjectURL(url);
+                        $(a).remove();
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.log("Error: " + errorThrown);
+                        // Handle the error
+                    }
+                });
+            });
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+        });
+
+        function setButtonWavesEffect(event) {
+            $(event.currentTarget).find('[role="menu"] li a').removeClass('waves-effect');
+            $(event.currentTarget).find('[role="menu"] li:not(.disabled) a').addClass('waves-effect');
+        }
+        function restrictInputToNumbersAndColon(input) {
+            input.value = input.value.replace(/[^0-9:]/g, '').replace(/(\:.*)\:/g, '$1');
+        }
+    </script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="~/lib/daterangepicker/daterangepicker.min.js" type="text/javascript"></script>
+    <script src="~/lib/clockpicker/bootstrap-clockpicker.min.js"></script>
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <script src="~/lib/jquery-validation/jquery.validate.js"></script> <!-- JQuery Steps Plugin Js -->
+    <script src="~/lib/jquery-steps/jquery.steps.js"></script> <!-- JQuery Steps Plugin Js -->
+    <script src="~/lib/dual-list-box/dist/dual-listbox.js"></script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

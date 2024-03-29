@@ -1,0 +1,257 @@
+﻿@model BidOrderDetailModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>:: Bidding Management System :: Login</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Bidding Automation System">
+    <meta name="author" content="Design By: https://www.orangesolbd.com/">
+
+    <link rel="icon" href="~/images/favicon.png" type="image/x-icon">
+    <!-- VENDOR CSS -->
+    <link href="~/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+
+    <!-- MAIN CSS -->
+    <link href="~/scripts/css/main.css" rel="stylesheet" type="text/css" />
+    <style>
+        /* Your CSS styles for the report layout */
+        .readonly {
+            background-color: #ffffff !important; /* Set a background color to indicate readonly state */
+        }
+        
+    </style>
+</head>
+
+<body data-theme="light" class="font-nunito">
+    <div class="col-lg-12" style="margin-top:20px;">
+    </div>
+    @* <div class="block-header">
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12" style="text-align:center;">
+                <h3>Nabil Group</h3>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12" style="text-align:center;">
+                <h2>Bid Details</h2>
+            </div>
+        </div>
+        <div class="row clearfix">
+            <div class="col-lg-12">
+                <div class="body" style="padding-bottom: 10px !important;">
+                    <div class="form-row">
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="bidId">Bid Id</label>
+                            <input type="text" class="form-control readonly" id="bidId" value="@Model.CommBidMstrs.BidId" readonly />
+                        </div>
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="bidDt">Bid Date</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="icon-calendar"></i></span>
+                                </div>
+                                <input data-provide="datepicker" data-date-autoclose="true" class="form-control readonly" placeholder="Bid Date" id="bidDt" autocomplete="off" value="@Model.CommBidMstrs.BidDate.ToString(" dd-MMM-yyyy")" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="startTm">Start Time</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="icon-clock"></i></span>
+                                </div>
+                                <input data-provide="datepicker" data-date-autoclose="true" class="form-control readonly" placeholder="Start Time" id="startTm" autocomplete="off" value="@Model.CommBidMstrs.BidStrtTm.ToString(" hh:mm tt")" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="endTm">End Time</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="icon-clock"></i></span>
+                                </div>
+                                <input data-provide="datepicker" data-date-autoclose="true" class="form-control readonly" placeholder="End Time" id="endTm" autocomplete="off" value="@Model.CommBidMstrs.BidEndTm.ToString(" hh:mm tt")" readonly />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group form-float col-sm-12 col-md-6" style="margin-bottom:5px !important;">
+                            <label for="prodList">Product Name</label>
+                            <input type="text" class="form-control readonly" id="wareList" value="@Model.CommBidMstrs.Prod.ProdName" readonly />
+                        </div>
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="wareList">Warehouse Name</label>
+                            <input type="text" class="form-control readonly" id="wareList" value="@Model.CommBidMstrs.Warehouse.WareName" readonly />
+                        </div>
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="wareList">Status</label>
+                            <input type="text" class="form-control readonly" id="bidStat" value="@(Model.CommBidMstrs.BidStat == 0 ? "Draft" : Model.CommBidMstrs.BidStat == 1 ? "Active" : Model.CommBidMstrs.BidStat == 2 ? "Closed" : "Canceled")" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="bidQnty">Bid Qnty</label>
+                            <input type="text" class="form-control readonly" id="bidQnty" value="@Model.CommBidMstrs.BidQnty.ToString("N0")" readonly />
+                        </div>
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="bidRate">Bid Rate</label>
+                            <input type="text" class="form-control readonly" id="bidRate" value="@Model.CommBidMstrs.BidRate.ToString("N2")" readonly />
+                        </div>
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="allocQnty">Allocate Qnty</label>
+                            <input type="text" class="form-control readonly" id="allocQnty" value="@(Model.CommBidMstrs.AllocQnty?.ToString("N2") ?? "0.00")" readonly />
+                        </div>
+                        <div class="form-group form-float col-sm-6 col-md-3" style="margin-bottom:5px !important;">
+                            <label for="allocRate">Allocate Rate</label>
+                            <input type="text" class="form-control readonly" id="allocRate" value="@(Model.CommBidMstrs.AllocRate?.ToString("N2") ?? "0.00")" readonly />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group form-float col-sm-12 col-md-12" style="margin-bottom:5px !important;">
+                            <label for="bidNote">Notes</label>
+                            <textarea class="form-control readonly" rows="3" id="bidNote" readonly>@(Model.CommBidMstrs.BidNote != null ? Model.CommBidMstrs.BidNote.Trim() : "")</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>*@
+    <div class="row clearfix">
+        <div class="col-lg-12">
+            <div class="table-responsive">
+                <table id="bidTable" class="table table-striped table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th colspan="8" style="padding: 0 !important; border: 0 !important;">
+                                <div class="block-header">
+                                    <div class="row">
+                                        <div class="col-lg-12 col-md-12 col-sm-12" style="text-align:center;">
+                                            <h3>Nabil Group</h3>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-lg-12 col-md-12 col-sm-12" style="text-align:center;">
+                                            <h2>Bid Details</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                                <table class="table table-striped table-bordered" style="width:100%">
+                                    <tr>
+                                        <td>Bid Id:</td>
+                                        <td style="text-align:center;">@Model.CommBidMstrs.BidId</td>
+                                        <td>Bid Date:</td>
+                                        <td style="text-align:center;">@Model.CommBidMstrs.BidDate.ToString(" dd-MMM-yyyy")</td>
+                                        <td>Start Time:</td>
+                                        <td style="text-align:center;">@Model.CommBidMstrs.BidStrtTm.ToString(" hh:mm tt")</td>
+                                        <td>End Time:</td>
+                                        <td style="text-align:center;">@Model.CommBidMstrs.BidEndTm.ToString(" hh:mm tt")</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">Product Name:</td>
+                                        <td colspan="2">@Model.CommBidMstrs.Prod.ProdName</td>
+                                        <td>Warehouse Name:</td>
+                                        <td>@Model.CommBidMstrs.Warehouse.WareName</td>
+                                        <td>Status</td>
+                                        <td style="text-align:center;">@(Model.CommBidMstrs.BidStat == 0 ? "Draft" : Model.CommBidMstrs.BidStat == 1 ? "Active" : Model.CommBidMstrs.BidStat == 2 ? "Closed" : "Canceled")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Bid Qnty:</td>
+                                        <td style="text-align:center;">@Model.CommBidMstrs.BidQnty.ToString("N0")</td>
+                                        <td>Bid Rate:</td>
+                                        <td style="text-align:center;">@Model.CommBidMstrs.BidRate.ToString("N2")</td>
+                                        <td>Allocate Qnty:</td>
+                                        <td style="text-align:center;">@(Model.CommBidMstrs.AllocQnty?.ToString("N2") ?? "0.00")</td>
+                                        <td>Allocate Rate:</td>
+                                        <td style="text-align:center;">@(Model.CommBidMstrs.AllocRate?.ToString("N2") ?? "0.00")</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Notes:</td>
+                                        <td colspan="7">@(Model.CommBidMstrs.BidNote != null ? Model.CommBidMstrs.BidNote.Trim() : "")</td>
+                                    </tr>
+                                </table>
+
+
+                            </th>
+                        </tr>
+                        <tr>
+                            <th style="text-align: center;">Sys #</th>
+                            <th style="text-align: center;">Party Name</th>
+                            <th style="text-align: center;">Contact No</th>
+                            <th style="text-align: center;">Bid Qnty</th>
+                            <th style="text-align: center;">Bid Rate</th>
+                            <th style="text-align: center;">Alloc Qnty</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: center;">Sms</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int serialNo = 1;
+                        }
+                        @foreach (var bidder in Model.CommBidClntBidders)
+                        {
+                            <tr data-status="@(bidder.BidAttnStat == 1 ? "active" : "inactive")">
+                                <td data-editable="false" align="center">@serialNo</td>
+                                <td data-editable="false">@bidder.Party.PartyName</td>
+                                <td data-editable="false" align="center">@bidder.SmsContNo</td>
+                                <td data-editable="false" align="right">@((bidder.BidQnty.HasValue) ? bidder.BidQnty.Value.ToString("N0") : "0")</td>
+                                <td data-editable="false" align="right">@((bidder.BidRate.HasValue) ? bidder.BidRate.Value.ToString("N2") : "0")</td>
+                                <td data-editable="@(bidder.BidAttnStat == 1 ? "true" : "false")" class="numeric-column" align="right">@((bidder.AllocQnty.HasValue) ? bidder.AllocQnty.Value.ToString("N0") : "0")</td>
+                                <td data-editable="false" align="center">@Html.Raw(bidder.BidAttnStat == 1 ? "<span class='badge badge-warning'>Active</span>" : "<span class='badge badge-danger'>Inactive</span>")</td>
+                                <td data-editable="false" align="center">@Html.Raw(bidder.SmsSendStat == 1 ? "<i class='fa fa-check'></i>" : "")</td>
+                            </tr>
+
+                            serialNo++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="row clearfix">
+        <div class="col-lg-12">
+            <div class="row">
+                <div class="col-lg-3 col-md-3 col-sm-6" style="text-align:center;">
+                    <h6 style="margin:0px;">@(Model.CommBidMstrs.AddBy ?? "") &nbsp;</h6>
+                    <small>@(Model.CommBidMstrs.EntryTm != null ? @Model.CommBidMstrs.EntryTm.Value.ToString("dd-MMM-yy hh:mm tt") : "") &nbsp;</small>
+                    <hr style="margin:5px !important;" />
+                    <h6>Created By</h6>
+                </div>
+                <div class="col-lg-3 col-md-3 col-sm-6" style="text-align:center;">
+                    <h6 style="margin:0px;">@(Model.CommBidMstrs.ActivatedBy ?? "") &nbsp;</h6>
+                    <small>@(Model.CommBidMstrs.ActivationTm != null ? @Model.CommBidMstrs.ActivationTm.Value.ToString("dd-MMM-yy hh:mm tt") : "") &nbsp;</small>
+                    <hr style="margin:5px !important;" />
+                    <h6>Activated By</h6>
+                </div>
+                <div class="col-lg-3 col-md-3 col-sm-6" style="text-align:center;">
+                    <h6 style="margin:0px;">@(Model.CommBidMstrs.ProcessBy ?? "") &nbsp;</h6>
+                    <small>@(Model.CommBidMstrs.ProcessTm != null ? @Model.CommBidMstrs.ProcessTm.Value.ToString("dd-MMM-yy hh:mm tt") : "") &nbsp;</small>
+                    <hr style="margin:5px !important;" />
+                    <h6>Process By</h6>
+                </div>
+                <div class="col-lg-3 col-md-3 col-sm-6" style="text-align:center;">
+                    <h6 style="margin:0px;">@(Model.CommBidMstrs.CloseBy ?? "") &nbsp;</h6>
+                    <small>@(Model.CommBidMstrs.CloseTm != null ? @Model.CommBidMstrs.CloseTm.Value.ToString("dd-MMM-yy hh:mm tt") : "") &nbsp;</small>
+                    <hr style="margin:5px !important;" />
+                    <h6>Closed By</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="~/lib/bundles/libscripts.bundle.js"></script>
+    <script src="~/lib/bundles/vendorscripts.bundle.js"></script>
+    <!-- page js file -->
+    @*<script src="~/lib/bundles/mainscripts.bundle.js"></script>*@
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script>
+        $(document).ready(function () { printReport() });
+        function printReport() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+﻿@model SignIn
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>:: Bidding Management System :: Login</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Bidding Automation System">
+    <meta name="author" content="Design By: https://www.orangesolbd.com/">
+
+    <link rel="icon" href="~/images/favicon.png" type="image/x-icon">
+    <!-- VENDOR CSS -->
+    <link href="~/lib/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="~/fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+
+    <!-- MAIN CSS -->
+    <link href="~/scripts/css/main.css" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body data-theme="light" class="font-nunito">
+    <!-- WRAPPER -->
+    <div id="wrapper" class="theme-green">
+        <div class="vertical-align-wrap">
+            <div class="vertical-align-middle auth-main">
+                <div class="auth-box">
+                    <div class="top">
+                        <img src="~/images/logo-white.png" alt="Orange Solution">
+                    </div>
+                    <div class="card">
+                        <div class="header">
+                            <p class="lead">Login to your account</p>
+                        </div>
+                        <div class="body">
+                            @if (!string.IsNullOrEmpty(@ViewBag.ErrorMessage))
+                            {
+                                <div class="alert alert-danger alert-dismissible" role="alert">
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <i class="fa fa-times-circle"></i> @ViewBag.ErrorMessage
+                                </div>
+                            }
+                            <form class="form-auth-small" asp-controller="Security" asp-action="SignInApp" method="post">
+                                <div class="form-group">
+                                    <label asp-for="UserName" class="control-label sr-only">User Name</label>
+                                    <input type="text" class="form-control" asp-for="UserName" placeholder="User Name" required>
+                                    <span asp-validation-for="UserName" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="Password" class="control-label sr-only">Password</label>
+                                    <input type="password" class="form-control" asp-for="Password" placeholder="Password" required>
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+                                </div>
+                                <div class="form-group clearfix">
+                                    <label class="fancy-checkbox element-left">
+                                        <input type="checkbox" asp-for="RememberMe">
+                                        <span>Remember me</span>
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg btn-block">LOGIN</button>
+                                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END WRAPPER -->
+</body>
+</html>

@@ -1,0 +1,508 @@
+﻿@model CommLoginInfo
+@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/bootstrap-datepicker/css/bootstrap-datepicker3.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/lib/select2-bootstrap4-theme/dist/select2-bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+    <style>
+        #userImage {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+    </style>
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="body">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#Settings">Settings</a></li>
+                </ul>
+            </div>
+            <div class="tab-content">
+
+                <div class="tab-pane active" id="Settings">
+                    <input type="hidden" id="userId" value="@Model.UserId.ToString()">
+                    <div class="body">
+                        <h6>Profile Photo</h6>
+                        <div class="media">
+                            <div class="media-left m-r-15">
+                                @if (string.IsNullOrEmpty(ViewBag.UserProfileImg))
+                                {
+                                    <img id="userImage" src="~/images/user.png" class="user-photo media-object" alt="User Profile Picture">
+                                } else {
+                                    <img id="userImage" src="@ViewBag.UserProfileImg" class="user-photo media-object" alt="User Profile Picture">
+                                }
+                                @*<img id="userImage" src="~/images/user.png" class="user-photo media-object" alt="User">*@
+                            </div>
+                            <div class="media-body">
+                                <p>
+                                    Upload your photo.
+                                    <br> <em>For better looking, image width and height need to be same like 200px x 200px</em>
+                                </p>
+                                <button type="button" class="btn btn-default" id="btn-upload-photo">Upload Photo</button>
+                                <input type="file" id="filePhoto" class="sr-only">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="body">
+                        <h6>Basic Information</h6>
+                        <div class="row clearfix">
+                            <div class="col-lg-6 col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="fastName" placeholder="First Name" value="@Model.FastName.Trim()">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="lastName" placeholder="Last Name" value="@Model.LastName.Trim()">
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="icon-calendar"></i></span>
+                                            </div>
+                                            <input data-provide="datepicker" data-date-autoclose="true" class="form-control" placeholder="Birthdate" id="brthDt" value="@(Model.BrthDt.HasValue ? Model.BrthDt.Value.ToString("yyyy-MM-dd") : string.Empty)">
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <div>
+                                            <label class="fancy-radio">
+                                                <input name="gender2" value="male" type="radio" @(Model.Gender == "M" ? "checked" : "")>
+                                                <span><i></i>Male</span>
+                                            </label>
+                                            <label class="fancy-radio">
+                                                <input name="gender2" value="female" type="radio" @(Model.Gender == "F" ? "checked" : "")>
+                                                <span><i></i>Female</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="userAdd" placeholder="Address" value="@(!string.IsNullOrEmpty(Model.UserAdd) ? Model.UserAdd.Trim() : string.Empty)">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="userCity" placeholder="City" value="@(!string.IsNullOrEmpty(Model.UserCity) ? Model.UserCity.Trim() : string.Empty)">
+                                </div>
+                                <div class="form-group">
+                                    <select class="form-control select2-cntry" id="userCntry">
+                                        <!-- Country will be dynamically populated here -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="UpdateBasic">Update</button> &nbsp;&nbsp;
+                        <button type="button" class="btn btn-default" id="CancelBasic">Cancel</button>
+                    </div>
+
+                    <div class="body">
+                        <div class="row clearfix">
+                            <div class="col-lg-6 col-md-12">
+                                <h6>Account Data</h6>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="userNm" value="@Model.UserNm.Trim()" disabled placeholder="Username">
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" class="form-control" id="emailAdd" value="@(!string.IsNullOrEmpty(Model.EmailAdd) ? Model.EmailAdd.Trim() : string.Empty)" placeholder="Email">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" id="contNo" value="@(!string.IsNullOrEmpty(Model.ContNo) ? Model.ContNo.Trim() : string.Empty)" placeholder="Phone Number">
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" id="UpdateOthers">Update</button> &nbsp;&nbsp;
+                                    <button class="btn btn-default" id="CancelOthers">Cancel</button>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6 col-md-12">
+                                <h6>Change Password</h6>
+                                <div class="form-group">
+                                    <input type="password" class="form-control" placeholder="Current Password" id="currentPassword">
+                                </div>
+                                <div class="form-group">
+                                    <input type="password" class="form-control" placeholder="New Password" id="newPassword">
+                                </div>
+                                <div class="form-group">
+                                    <input type="password" class="form-control" placeholder="Confirm New Password" id="confirmNewPassword">
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" id="ChangePasswd">Update</button> &nbsp;&nbsp;
+                                    <button class="btn btn-default">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section scripts
+{
+    <script>
+        $(function () {
+            // photo upload
+            $('#btn-upload-photo').on('click', function () {
+                $(this).siblings('#filePhoto').trigger('click');
+            });
+
+            // Show selected image preview
+            //$('#filePhoto').on('change', function () {
+            //    var input = $(this)[0];
+            //    if (input.files && input.files[0]) {
+            //        var reader = new FileReader();
+            //        reader.onload = function (e) {
+            //            $('#userImage').attr('src', e.target.result);
+            //        };
+            //        reader.readAsDataURL(input.files[0]);
+            //    }
+            //});
+        });
+        $(document).ready(function () {
+            // Fetch the country data
+            $.ajax({
+                url: '/General/GetCountryAjax',
+                dataType: 'json',
+                type: 'GET',
+                success: function (data) {
+                    // Initialize Select2 with the fetched data
+                    $('.select2-cntry').select2({
+                        theme: 'bootstrap4',
+                        data: data,
+                    });
+                    // Get the value from the database or Set the default value
+                    var selectedValue = '@(string.IsNullOrEmpty(Model.UserCntry) ? "Bangladesh" : Model.UserCntry)'; // Set default value if null or empty
+
+                    // Set the selected value in Select2
+                    $('.select2-cntry').val(selectedValue).trigger('change');
+                },
+            });
+
+            // Store the initial field values
+            var initialValues = {
+                fastName: $('#fastName').val(),
+                lastName: $('#lastName').val(),
+                brthDt: $('#brthDt').val(),
+                gender: $('input[name="gender2"]:checked').val(),
+                userAdd: $('#userAdd').val(),
+                userCity: $('#userCity').val()
+            };
+
+            // Saving Basic Information
+            $('#UpdateBasic').click(function () {
+                // e.preventDefault();
+                $("#UpdateBasic").html("Saving...");
+                $("#UpdateBasic").prop("disabled", true);
+
+                var userId = $('#userId').val();
+                var fastName = $('#fastName').val().trim();
+                var lastName = $('#lastName').val().trim();
+                var brthDt = $('#brthDt').val();
+                var optionSelected = $('input[name="gender2"]:checked').val();
+                var gender = (optionSelected === "male") ? "M" : "F";
+                var userAdd = $('#userAdd').val().trim();
+                var userCity = $('#userCity').val().trim();
+                var userCntry = $('#userCntry').val().trim();
+
+                if (fastName.length == 0) {
+                    swal("Blank Data", "You need to give First Name before Continue !!!", "warning");
+                    $("#UpdateBasic").html("Update");
+                    $("#UpdateBasic").prop("disabled", false);
+                    return false;
+                }
+                if (lastName.length == 0) {
+                    swal("Blank Data", "You need to give Last Name before Continue !!!", "warning");
+                    $("#UpdateBasic").html("Update");
+                    $("#UpdateBasic").prop("disabled", false);
+                    return false;
+                }
+                if (brthDt.length == 0) {
+                    swal("Blank Data", "You need to give Birth Date before Continue !!!", "warning");
+                    $("#UpdateBasic").html("Update");
+                    $("#UpdateBasic").prop("disabled", false);
+                    return false;
+                }
+                var employeeData = {
+                    UserId: userId,
+                    FastName: fastName,
+                    LastName: lastName,
+                    BrthDt: brthDt,
+                    Gender: gender,
+                    UserAdd: userAdd,
+                    UserCity: userCity,
+                    UserCntry: userCntry
+                };
+                // console.log(employeeData);
+
+                $.ajax({
+                    async: false,
+                    url: '/Dashboard/UpdateUserBasicDet',
+                    method: 'POST',
+                    data: {
+                        model: employeeData
+                    },
+                    success: function (response) {
+                        if (response.success == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                            $("#UpdateBasic").html("Update");
+                            $("#UpdateBasic").prop("disabled", false);
+                        } else {
+                            $("#UpdateBasic").html("Update");
+                            $("#UpdateBasic").prop("disabled", false);
+                            swal("Update Done", "Your Given Information Updated Successfully", "success");
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                        $("#UpdateBasic").html("Update");
+                        $("#UpdateBasic").prop("disabled", false);
+                    }
+                });
+            });
+
+            $('#CancelBasic').click(function () {
+                $('#fastName').val(initialValues.fastName);
+                $('#lastName').val(initialValues.lastName);
+                $('#brthDt').val(initialValues.brthDt);
+                $('input[name="gender2"]').each(function () {
+                    if ($(this).val() === initialValues.gender) {
+                        $(this).prop('checked', true);
+                    }
+                });
+                $('#userAdd').val(initialValues.userAdd);
+                $('#userCity').val(initialValues.userCity);
+            });
+
+            // Saving Basic Information
+            $('#UpdateOthers').click(function () {
+                // e.preventDefault();
+                $("#UpdateOthers").html("Saving...");
+                $("#UpdateOthers").prop("disabled", true);
+                var userId = $('#userId').val();
+                var emailAdd = $('#emailAdd').val();
+                var contNo = $('#contNo').val().trim();
+
+                if (emailAdd.length == 0) {
+                    swal("Blank Data", "You need to give EMail Address before Continue !!!", "warning");
+                    $("#UpdateOthers").html("Update");
+                    $("#UpdateOthers").prop("disabled", false);
+                    return false;
+                }
+                if (contNo.length == 0) {
+                    swal("Blank Data", "You need to give Contact No before Continue !!!", "warning");
+                    $("#UpdateOthers").html("Update");
+                    $("#UpdateOthers").prop("disabled", false);
+                    return false;
+                }
+
+                var employeeData = {
+                    UserId: userId,
+                    EmailAdd: emailAdd,
+                    ContNo: contNo
+                };
+                // console.log(employeeData);
+
+                $.ajax({
+                    async: false,
+                    url: '/Dashboard/UpdateUserOtherDet',
+                    method: 'POST',
+                    data: {
+                        model: employeeData
+                    },
+                    success: function (response) {
+                        if (response.success == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                            $("#UpdateBasic").html("Update");
+                            $("#UpdateBasic").prop("disabled", false);
+                        } else {
+                            $("#UpdateBasic").html("Update");
+                            $("#UpdateBasic").prop("disabled", false);
+                            swal("Update Done", "Your Given Information Updated Successfully", "success");
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                        $("#UpdateBasic").html("Update");
+                        $("#UpdateBasic").prop("disabled", false);
+                    }
+                });
+            });
+
+            $('#ChangePasswd').on('click', function () {
+                $("#ChangePasswd").html("Updating ...");
+                $("#ChangePasswd").prop("disabled", true);
+                var userId = $('#userId').val();
+                var currentPassword = $('#currentPassword').val();
+                var newPassword = $('#newPassword').val();
+                var confirmNewPassword = $('#confirmNewPassword').val();
+
+                // Perform client-side validation
+                if (currentPassword === '' || newPassword === '' || confirmNewPassword === '') {
+                    swal("Invalid Password", "Please fill in all fields.", "warning");
+                    $("#ChangePasswd").html("Update");
+                    $("#ChangePasswd").prop("disabled", false);
+                    return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                    swal("Invalid Password", "New password and confirm password do not match.", "warning");
+                    $("#ChangePasswd").html("Update");
+                    $("#ChangePasswd").prop("disabled", false);
+                    return;
+                }
+                if (currentPassword === newPassword) {
+                    swal("Same Password", "You are giving Same Password in Current and New Password Field.", "warning");
+                    $("#ChangePasswd").html("Update");
+                    $("#ChangePasswd").prop("disabled", false);
+                    return;
+                }
+                // Send the data to the server for validation and update
+                $.ajax({
+                    async: false,
+                    url: '/Dashboard/UpdatePasswordDet',
+                    method: 'POST',
+                    data: {
+                        userId: userId,
+                        currentPassword: currentPassword,
+                        newPassword: newPassword
+                    },
+                    success: function (response) {
+                        if (response.success == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                            $("#ChangePasswd").html("Update");
+                            $("#ChangePasswd").prop("disabled", false);
+                        } else {
+                            $("#ChangePasswd").html("Update");
+                            $("#ChangePasswd").prop("disabled", false);
+                            $('#currentPassword').val("");
+                            $('#newPassword').val("");
+                            $('#confirmNewPassword').val("");
+                            swal("Update Done", "Password Changed Successfully", "success");
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                        $("#ChangePasswd").html("Update");
+                        $("#ChangePasswd").prop("disabled", false);
+                    }
+                });
+            });
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+
+            // Event handler for file input change
+            $('#filePhoto').on('change', function (event) {
+                var file = event.target.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        var img = new Image();
+                        img.src = e.target.result;
+                        img.onload = function () {
+                            var resizedImg = resizeImage(img, 140, 140);
+                            var formData = new FormData();
+                            formData.append('image', resizedImg, 'resized.jpg');
+                            // Perform the upload to the server using AJAX or other method
+                            // Here's an example of how to use AJAX to send the resized image to the server
+                            $.ajax({
+                                url: '/Dashboard/UploadProfileImage',
+                                type: 'POST',
+                                // data: { image: resizedImg },
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function (response) {
+                                    if (response.success == true) {
+                                        // Handle the success response from the server
+                                        // Update the user image on the page if needed
+                                        $('#userImage').attr('src', response.imageUrl);
+                                        $('.user-photo').attr('src', response.imageUrl);
+                                        
+                                    } else {
+                                        var errorMessage = response.message;
+                                        showErrorToast(errorMessage);
+                                    }
+                                },
+                                error: function (xhr, status, error) {
+                                    // Handle the error response from the server
+                                    console.log('Error uploading image:', error);
+                                }
+                            });
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Function to resize the image
+            function resizeImage(image, maxWidth, maxHeight) {
+                var canvas = document.createElement('canvas');
+                var ctx = canvas.getContext('2d');
+                var width = image.width;
+                var height = image.height;
+                var newWidth, newHeight;
+
+                // Calculate the new dimensions while maintaining aspect ratio
+                if (width > height) {
+                    newWidth = maxWidth;
+                    newHeight = height * (maxWidth / width);
+                } else {
+                    newHeight = maxHeight;
+                    newWidth = width * (maxHeight / height);
+                }
+
+                // Set the canvas dimensions and draw the image
+                canvas.width = newWidth;
+                canvas.height = newHeight;
+                ctx.drawImage(image, 0, 0, newWidth, newHeight);
+
+                // Convert the resized image to a Blob object
+                var dataURL = canvas.toDataURL('image/jpeg');
+                var byteString = atob(dataURL.split(',')[1]);
+                var ab = new ArrayBuffer(byteString.length);
+                var ia = new Uint8Array(ab);
+                for (var i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                var blob = new Blob([ab], { type: 'image/jpeg' });
+
+                return blob;
+            }
+
+        });
+    </script>
+    < !--OTHER SCRIPTS INCLUDED ON THIS PAGE - START-- >
+    <script src="~/lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/select2/js/select2.min.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}

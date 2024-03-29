@@ -1,0 +1,301 @@
+﻿@section Styles {
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - START -->
+    <link rel="stylesheet" href="~/lib/jquery-datatable/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedcolumns.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/jquery-datatable/fixedeader/dataTables.fixedheader.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css">
+    <link rel="stylesheet" href="~/lib/sweetalert/sweetalert.css" />
+    <!-- OTHER CSS INCLUDED ON THIS PAGE - END -->
+}
+<div class="col-lg-12" style="margin-top:20px;">
+</div>
+<!-- Add New Button -->
+<button class="btn btn-primary mb-3" data-toggle="modal" data-target="#addModal">Add New</button>
+<div class="row clearfix">
+    <div class="col-lg-12">
+        <div class="card">
+            <div class="header">
+                <h2>Party Category List </h2>
+            </div>
+            <div class="body">
+                <div class="table-responsive">
+                    <table id="party-cat-table" class="table table-bordered table-hover dataTable table-custom" style="width:100% !important;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;">Cat Id</th>
+                                <th style="text-align:center;">Category Name</th>
+                                <th style="text-align:center;">Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add/Edit Category</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Form fields will be dynamically populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveCategory">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            var catTable = $('#party-cat-table').DataTable();
+            retreiveServerData();
+
+            // Function to populate the DataTable with data
+            function retreiveServerData() {
+                catTable.destroy();
+                // Initialize the datatable
+                catTable = $('#party-cat-table').DataTable({
+                    processing: true,
+                    // serverSide: true, // Server Side Processing Disabling
+                    // Paging Setups
+                    paging: true,
+                    // Searching Setups
+                    searching: { regex: true },
+                    contentType: "application/json",
+                    dataType: "json",
+                    order: [[1, 'asc']],
+                    // Set up datatable options and configuration
+                    ajax: {
+                        url: '/General/GetPartyCatAjax',
+                        method: 'GET',
+                        dataSrc: "data",
+                        data: function (d) {
+                            return JSON.stringify(d);
+                        }
+                    },
+                    // Define the columns
+                    columns: [
+                        {
+                            data: 'catId',
+                            className: 'text-center'
+                        },
+                        { data: 'catName' },
+                        {
+                            data: 'isDiscontinue',
+                            render: function (data, type, row) {
+                                if (data === 0) {
+                                    return '<span class="badge badge-info">Active</span>'; // Display tick mark icon
+                                } else {
+                                    return '<span class="badge badge-danger">Inactive</span>'; // Display nothing for 0
+                                }
+                            },
+                            className: 'text-center'
+                        },
+                        {
+                            data: null, render: function (data, type, row) {
+                                var editBtn = '<button type="button" class="btn btn-primary editCategory" data-id="' + row.catId + '" data-toggle="modal" data-target="#addModal"><i class="fa fa-edit"></i></button>';
+                                var deleteBtn = '<button type="button" class="btn btn-danger deleteCategory" data-id="' + row.catId + '"><i class="fa fa-trash"></i></button>';
+                                return editBtn + ' ' + deleteBtn;
+                            },
+                            className: 'text-center'
+                        }
+                    ]
+                });
+            }
+
+            // Open Add/Edit Modal
+            $('#addModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var categoryId = button.data('id'); // Extract category ID from data-id attribute
+                var modal = $(this);
+                // console.log(categoryId);
+
+                // Clear previous form data
+                modal.find('.modal-body').empty();
+
+                // Set modal title based on operation
+                if (categoryId) {
+                    modal.find('.modal-title').text('Edit Category');
+                } else {
+                    modal.find('.modal-title').text('Add Category');
+                }
+
+                // Populate form fields if editing
+                if (categoryId) {
+                    $.ajax({
+                        url: '/General/GetPartyCatDetAjax',
+                        data: { categoryId: categoryId },
+                        method: 'GET',
+                        success: function (category) {
+                            // Populate form fields with category data
+                            modal.find('.modal-body').html(`
+                                <div class="card">
+                                    <div class="body">
+                                        <input type="hidden" id="catId" value="${category[0].catId}">
+                                        <div class="form-group">
+                                            <label for="catName">Category Name</label>
+                                            <input type="text" class="form-control" id="catName" value="${category[0].catName}">
+                                        </div>
+                                        <div class="form-group">
+                                                <label for="isDiscontinue">Status</label>
+                                                <select class="custom-select" id="isDiscontinue">
+                                                    <option value="0" ${category[0].isDiscontinue == 0 ? 'selected' : ''}>Active</option>
+                                                    <option value="1" ${category[0].isDiscontinue == 1 ? 'selected' : ''}>Deactive</option>
+                                                </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                        }
+                    });
+                } else {
+                    // Populate form fields for adding a new category
+                    modal.find('.modal-body').html(`
+                        <div class="card">
+                            <div class="body">
+                                <div class="form-group">
+                                    <label for="catName">Category Name</label>
+                                    <input type="text" class="form-control" id="catName">
+                                </div>
+                                <div class="form-group">
+                                    <label for="isDiscontinue">Status</label>
+                                    <select class="custom-select" id="isDiscontinue">
+                                        <option value="0" selected>Active</option>
+                                        <option value="1">Deactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                }
+            });
+
+            // Save Category
+            $('#saveCategory').click(function () {
+                $("#saveCategory").html("Saving...");
+                $("#saveCategory").prop("disabled", true);
+                var categoryId = $('#catId').val();
+                var name = $('#catName').val().trim();
+                var status = $('#isDiscontinue').val();
+                if (name.length == 0) {
+                    swal("Blank Data", "You need to give Category Name before Continue !!!", "warning");
+                    $("#saveCategory").html("Save");
+                    $("#saveCategory").prop("disabled", false);
+                    return false;
+                }
+
+                var categoryData = {
+                    CatId: categoryId,
+                    CatName: name,
+                    IsDiscontinue: status
+                };
+                // console.log(categoryData);
+
+                $.ajax({
+                    async: false,
+                    url: '/General/AddOrEditPartyCategory',
+                    method: 'POST',
+                    data: {
+                        id: categoryId,
+                        model: categoryData
+                    },
+                    success: function (response) {
+                        if (response.success == false) {
+                            var errorMessage = response.message;
+                            showErrorToast(errorMessage);
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                        } else {
+                            $("#saveCategory").html("Save");
+                            $("#saveCategory").prop("disabled", false);
+                            // Close the modal
+                            $('#addModal').modal('hide');
+                            // Reload the DataTable
+                            retreiveServerData();
+                        }
+                    },
+                    error: function (error) {
+                        console.log(error);
+                        showErrorToast(error.status + ': ' + error.statusText);
+                        $("#saveCategory").html("Save");
+                        $("#saveCategory").prop("disabled", false);
+                    }
+                });
+            });
+
+            // Delete Category
+            $('#party-cat-table').on('click', '.deleteCategory', function () {
+                var categoryId = $(this).data('id');
+                // console.log(categoryId);
+                swal({
+                    title: "Are you sure?",
+                    text: "You will not be able to recover the Category name!",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#dc3545",
+                    confirmButtonText: "Yes, delete it!",
+                    closeOnConfirm: false
+                }, function () {
+                    $.ajax({
+                        url: '/General/DeletePartyCategory', // Replace with your actual API endpoint
+                        method: 'POST',
+                        data: { id: categoryId },
+                        success: function (response) {
+                            if (response.success == false) {
+                                var errorMessage = response.message;
+                                showErrorToast(errorMessage);
+                            } else {
+                                // Reload the DataTable
+                                retreiveServerData();
+                                swal("Deleted!", "Party category has been deleted.", "success");
+                            }
+                        },
+                        error: function (error) {
+                            console.log(error);
+                            showErrorToast(error.status + ': ' + error.statusText);
+                        }
+                    });
+                });
+            });
+
+            function showErrorToast(errorInfo) {
+                //https://codeseven.github.io/toastr/demo.html
+                toastr.options = {
+                    timeOut: "3000",
+                    closeButton: true,
+                    newestOnTop: true,
+                    progressBar: true,
+                    positionClass: 'toast-bottom-right'
+                };
+                toastr['error']('Error Occured: ' + errorInfo);
+            }
+        });
+
+    </script>
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - START -->
+    <script src="~/lib/bundles/datatablescripts.bundle.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/dataTables.buttons.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.bootstrap4.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.colVis.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.html5.min.js"></script>
+    <script src="~/lib/jquery-datatable/buttons/buttons.print.min.js"></script>
+    <script src="~/lib/toastr/toastr.js"></script>
+    <script src="~/lib/sweetalert/sweetalert.min.js"></script> <!-- SweetAlert Plugin Js -->
+    <!-- OTHER SCRIPTS INCLUDED ON THIS PAGE - END -->
+}
